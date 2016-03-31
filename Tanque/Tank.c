@@ -19,10 +19,10 @@ void setup()
 	pinMode(EnableRight, OUTPUT);//same for right one
 
 	//set al motor connected pins as output
-	pinMode(MotorL1, OUTPUT);
-	pinMode(MotorL2, OUTPUT);
-	pinMode(MotorR1, OUTPUT);
-	pinMode(MotorR2, OUTPUT);
+	pinMode(MotorLF, OUTPUT);
+	pinMode(MotorLB, OUTPUT);
+	pinMode(MotorRF, OUTPUT);
+	pinMode(MotorRB, OUTPUT);
 }
 
 // the loop function runs over and over again until power down or reset
