@@ -3,10 +3,10 @@
  Created:	3/31/2016 5:40:30 PM
  Author:	Benjamint
 */
-
+#include "Arduino.h"
 #include "Types.h"
 #include "Pinout.h"
-#include "States.c"
+#include "States.h"
 
 int state;
 
@@ -52,3 +52,44 @@ void loop()
 		break;
 	}
 }
+
+void eStateBeIdle()
+{
+  setBoth(LOW, LOW, LOW, LOW);
+}
+
+void eStateMoveForward()
+{
+  eStateBeIdle();
+  setBoth(HIGH, LOW, HIGH, LOW);
+}
+
+void eStateMoveBackwards()
+{
+  eStateBeIdle();
+  setBoth(LOW, HIGH, LOW, HIGH);
+}
+
+void eStateTurnLeft()
+{
+  eStateBeIdle();
+  setBoth(HIGH, LOW, LOW, HIGH);
+}
+
+void eStateTurnRight()
+{
+  eStateBeIdle();
+  setBoth(LOW, HIGH, HIGH, LOW);
+}
+
+void setBoth(int MotorLeftForward,
+       int MotorLeftBackwards,
+       int MotorRightForward,
+       int MotorRightBacwards)
+{
+  digitalWrite(MotorLF, MotorLeftForward);
+  digitalWrite(MotorLB, MotorLeftBackwards);
+  digitalWrite(MotorLF, MotorRightForward);
+  digitalWrite(MotorLB, MotorRightBacwards);
+}
+
