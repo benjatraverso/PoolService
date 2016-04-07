@@ -1,15 +1,12 @@
 const byte EnableLeft = 10;  // Enable Pin for left motor
-const byte EnableRight = 11;  // Enable Pin for right motor
 
 const byte MotorLF = 8;   // Control pin Forward for left motor
 const byte MotorLB = 9;   // Control pin Backward for left motor
-const byte MotorRF = 12;  // Control pin Forward for right motor
-const byte MotorRB = 13;  // Control pin Backward for right motor
 
 const int  NORMAL_SPEED = 255/2;
 const int  LOW_SPEED	= 255/4;
 const int  HIGH_SPEED	= 255;
-const int  DELAY		= 5000;
+const int  DELAY		= 2500;
 
 int Speed;
 
@@ -24,7 +21,7 @@ void setup()
 	pinMode(EnableLeft, OUTPUT);
 	pinMode(MotorLF, OUTPUT);
 	pinMode(MotorLB, OUTPUT);
-	Speed = NORMAL_SPEED;
+	Speed = LOW_SPEED;
 }
 
 ////////////////////////////////////////////////////////////////////////
