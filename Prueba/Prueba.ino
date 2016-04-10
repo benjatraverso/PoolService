@@ -1,15 +1,15 @@
 const byte EnableLeft = 10;  // Enable Pin for left motor
 
-const byte MotorLF = 8;   // Control pin Forward for left motor
-const byte MotorLB = 9;   // Control pin Backward for left motor
+const byte MotorLF = 12;   // Control pin Forward for left motor
+const byte MotorLB = 13;   // Control pin Backward for left motor
 
-const int  NORMAL_SPEED = 255/2;
-const int  LOW_SPEED	= 255/4;
+const int  NORMAL_SPEED = 100;
+const int  LOW_SPEED	= 50;
 const int  HIGH_SPEED	= 255;
 const int  DELAY		= 2500;
 
 int Speed;
-
+int count = 0;
 ////////////////////////////////////////////////////////////////////////
 //
 //									SETUP
@@ -55,4 +55,18 @@ void loop()
 	digitalWrite(MotorLB, LOW);
 	analogWrite(EnableLeft, 0);
 	delay(DELAY/2);
+
+  //incremento velocidades para descartar que el motor no se mueve por velocidad baja.
+  if(Speed == 255)
+  {
+    Speed = 50;
+  }
+  else 
+  {
+    Speed+=50;
+  }
+  if(Speed > 255)
+  {
+    Speed = 255;
+  }
 }
