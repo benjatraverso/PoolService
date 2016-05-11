@@ -11,8 +11,10 @@ const bool BACKWARDS  = 0;
 const byte NORMAL_SPEED = 100;
 const byte LOW_SPEED = 75;
 const byte HIGH_SPEED = 125;
-const byte leftProximitySensor = 2;
-const byte rightProximitySensor = 3;
+const byte leftProximitySensor = 0; //analog input 0 reads left sensor
+const byte rightProximitySensor = 1; //analog input 1 reads right sensor
+const byte leftSensorEmitter = 5;
+const byte rightSensorEmitter = 6;
 
 enum States
 {
@@ -29,10 +31,6 @@ enum States
 int glState;
 int glSpeed;
 
-volatile int glRightSensorTriggered = LOW;
-volatile int glRightSensorTriggered = LOW;
-
-
 // the setup function runs once when you press reset or power the board
 void setup()
 {
@@ -40,6 +38,8 @@ void setup()
   Serial.begin(9600);
   pinMode(EnableLeft, OUTPUT); //set enable motor pin as output
   pinMode(EnableRight, OUTPUT);//same for right one
+  pinmode(rightSensorEmitter, OUTPUT);
+  pinmode(leftSensorEmitter, OUTPUT);
 
   //set al motor connected pins as output
   pinMode(MotorLF, OUTPUT);
@@ -58,44 +58,8 @@ void setup()
 // the loop function runs over and over again until power down or reset
 void loop()
 {
-  switch (glState)
-  {
-    case eIdle:
-    {
-      eStateBeIdle();
-      state = eMoveForward;
-      break;
-    }
-    case eMoveForward:
-    {
-      eStateMoveForward(Speed);
-      state = eMoveBackwards;
-      break;
-    }
-    case eMoveBackwards:
-    {
-      eStateMoveBackwards(Speed);
-      state = eTurnLeft;
-      break;
-    }
-    case eTurnLeft:
-    {
-      eStateTurnLeft(Speed);
-      state = eTurnRight;
-      break;
-    }
-    case eTurnRight:
-    {
-      eStateTurnRight(Speed);
-      state = eIdle;
-      break;
-    }
-    default:
-    {
-      state = eIdle;
-    }
-  }
- delay(5000);
+  DoStep();
+  GetNextStep();
 }
 
 void eStateBeIdle()
@@ -176,4 +140,76 @@ void rightSensor( void )
 void leftSensor( void )
 {
   leftSensorTriggered = HIGH;
+}
+
+void DoStep( void )
+{
+  switch (glState)
+  {
+    case eIdle:
+    {
+      eStateBeIdle();
+      break;
+    }
+    case eMoveForward:
+    {
+      eStateMoveForward(Speed);
+      break;
+    }
+    case eMoveBackwards:
+    {
+      eStateMoveBackwards(Speed);
+      break;
+    }
+    case eTurnLeft:
+    {
+      eStateTurnLeft(Speed);
+      break;
+    }
+    case eTurnRight:
+    {
+      eStateTurnRight(Speed);
+      break;
+    }
+    default:
+    {
+      eStateBeIdle();
+    }
+  }
+}
+
+void GetNextStep( void )
+{
+    switch (glState)
+  {
+    case eIdle:
+    {
+      glState = ;
+      break;
+    }
+    case eMoveForward:
+    {
+      glState = ;
+      break;
+    }
+    case eMoveBackwards:
+    {
+      glState = ;
+      break;
+    }
+    case eTurnLeft:
+    {
+      glState = ;
+      break;
+    }
+    case eTurnRight:
+    {
+      glState = ;
+      break;
+    }
+    default:
+    {
+      glState = eIdle;
+    }
+  }
 }
