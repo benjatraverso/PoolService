@@ -29,12 +29,11 @@ enum States
 };
 
 int glState;
-int glSpeed;
 
 // the setup function runs once when you press reset or power the board
 void setup()
 {
-  state = eIdle;
+  glState = eIdle;
   Serial.begin(9600);
   pinMode(EnableLeft, OUTPUT); //set enable motor pin as output
   pinMode(EnableRight, OUTPUT);//same for right one
@@ -46,8 +45,6 @@ void setup()
   pinMode(MotorLB, OUTPUT);
   pinMode(MotorRF, OUTPUT);
   pinMode(MotorRB, OUTPUT);
-
-  Speed = NORMAL_SPEED;
 
   pinMode(proximitySensor, INPUT_PULLUP);
   //pin2 es interrupción 0, acoplo ahí el sensor de cercanía con cambio de estado
@@ -62,8 +59,60 @@ void loop()
   GetNextStep();
 }
 
+// HERE WE SET WHICH WOULD BE THE NEXT STEP
+void GetNextStep( void )
+{
+    switch (glState)
+  {
+    case eIdle:
+    {
+      glState = ;
+      break;
+    }
+    case eMoveForward:
+    {
+      //TODO: check sensors and delay, stay if nothing, change if any sensor is active
+      glState = ;
+      break;
+    }
+    case eMoveBackwards:
+    {
+      //no often, only try this step in case of error
+      glState = ;
+      break;
+    }
+    case eTurnLeft:
+    {
+      glState = ;
+      break;
+    }
+    case eTurnRight:
+    {
+      glState = ;
+      break;
+    }
+    case eTurnFullLeft:
+    {
+      //sensor level warning went to urgent
+      glState = ;
+      break;
+    }
+    case eTurnFullRight:
+    {
+      //sensor level warning went to urgent
+      glState = ;
+      break;
+    }
+    default:
+    {
+      glState = eIdle;
+    }
+  }
+}
+
 void eStateBeIdle()
 {
+  //can not have delays for many steps may use it to stop motors first
   digitalWrite(MotorLF, LOW);
   digitalWrite(MotorLB, LOW);
   digitalWrite(MotorRF, LOW);
@@ -76,7 +125,8 @@ void eStateBeIdle()
 
 void eStateMoveForward(int Speed)
 {
-  eStateBeIdle();
+  // always go to idle first to avoid enabling both pins of motor
+  eStateBeIdle(); 
   setRight(FORWARD, Speed);
   setLeft(FORWARD, Speed);
 }
@@ -171,45 +221,21 @@ void DoStep( void )
       eStateTurnRight(Speed);
       break;
     }
+    case eTurnFullLeft:
+    {
+      //sensor level warning went to urgent
+      eStateTurnFullLeft(Speed);
+      break;
+    }
+    case eTurnFullRight:
+    {
+      //sensor level warning went to urgent
+      eStateTurnFullRight(Speed);
+      break;
+    }
     default:
     {
       eStateBeIdle();
-    }
-  }
-}
-
-void GetNextStep( void )
-{
-    switch (glState)
-  {
-    case eIdle:
-    {
-      glState = ;
-      break;
-    }
-    case eMoveForward:
-    {
-      glState = ;
-      break;
-    }
-    case eMoveBackwards:
-    {
-      glState = ;
-      break;
-    }
-    case eTurnLeft:
-    {
-      glState = ;
-      break;
-    }
-    case eTurnRight:
-    {
-      glState = ;
-      break;
-    }
-    default:
-    {
-      glState = eIdle;
     }
   }
 }
