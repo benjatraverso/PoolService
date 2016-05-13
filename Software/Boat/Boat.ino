@@ -1,4 +1,4 @@
-const byte EnableLeft = 11;  // Enable Pin for left motor
+const byte EnableLeft = 11;   // Enable Pin for left motor
 const byte EnableRight = 10;  // Enable Pin for right motor
 
 const byte MotorLF = 8;   // Control pin Forward for left motor
