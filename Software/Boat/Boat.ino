@@ -18,6 +18,7 @@ const byte rightSensorEmitter   = 6;
 
 const int NO_OBJECT         = 800;
 const int OBJECT_TOO_CLOSE  = 400;
+const int SENSING_INTERVALS = 2000;   //reading sensors every 2 seconds
 
 enum States
 {
@@ -32,8 +33,8 @@ enum States
 };
 
 int glState;
+int glSpeed;
 
-// the setup function runs once when you press reset or power the board
 void setup()
 {
   glState = eIdle;
@@ -53,17 +54,20 @@ void setup()
   pinMode(MotorRB, OUTPUT);
 }
 
-// the loop function runs over and over again until power down or reset
 void loop()
 {
   DoStep();
   GetNextStep();
 }
 
-// HERE WE SET WHICH WOULD BE THE NEXT STEP
+////////////////////////////////////////////////////
+//
+//    HERE WE SET WHICH WOULD BE THE NEXT STEP
+//
+////////////////////////////////////////////////////
 void GetNextStep( void )
 {
-    switch (glState)
+  switch (glState)
   {
     case eIdle:
     {
@@ -87,10 +91,13 @@ void GetNextStep( void )
       int right = readRight();
       int left = readLeft();
       
-      if(right < NO_OBJECT || left < NO_OBJECT)
+      while(right < NO_OBJECT && left < NO_OBJECT)
       {
-        glState = left < right ? eTurnLeft : eTurnRight;
+        //we stay moving forward untin one of the sensors register something
+        delay( SENSING_INTERVALS );
       }
+
+      glState = left <= right ? eTurnLeft : eTurnRight;
       break;
     }
     case eMoveBackwards:
@@ -147,6 +154,28 @@ void GetNextStep( void )
       glState = eIdle;
     }
   }
+}
+
+int readLeft( void )
+{
+  digitalWrite(leftSensorEmitter, HIGH);
+  delay(1);//minimal time to wait to get a valid data
+  int lecture = analogRead(leftProximitySensor);
+
+  //leave emitter off for lowering consumtion
+  digitalWrite(leftSensorEmitter, LOW);
+  return lecture;
+}
+
+int readRight( void )
+{
+  digitalWrite(rightSensorEmitter, HIGH);
+  delay(1);//minimal time to wait to get a valid data
+  int lecture = analogRead(rightProximitySensor);
+
+  //leave emitter off for lowering consumtion
+  digitalWrite(rightSensorEmitter, LOW);
+  return lecture;
 }
 
 void eStateBeIdle()
@@ -242,34 +271,34 @@ void DoStep( void )
     }
     case eMoveForward:
     {
-      eStateMoveForward(Speed);
+      eStateMoveForward(glSpeed);
       break;
     }
     case eMoveBackwards:
     {
-      eStateMoveBackwards(Speed);
+      eStateMoveBackwards(glSpeed);
       break;
     }
     case eTurnLeft:
     {
-      eStateTurnLeft(Speed);
+      eStateTurnLeft(glSpeed);
       break;
     }
     case eTurnRight:
     {
-      eStateTurnRight(Speed);
+      eStateTurnRight(glSpeed);
       break;
     }
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
-      eStateTurnFullLeft(Speed);
+      eStateTurnFullLeft(glSpeed);
       break;
     }
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
-      eStateTurnFullRight(Speed);
+      eStateTurnFullRight(glSpeed);
       break;
     }
     default:
