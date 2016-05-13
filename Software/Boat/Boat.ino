@@ -33,7 +33,7 @@ enum States
 };
 
 int glState;
-int glSpeed;
+int glSpeed = NORMAL_SPEED;
 
 void setup()
 {
@@ -62,7 +62,7 @@ void loop()
 
 ////////////////////////////////////////////////////
 //
-//    HERE WE SET WHICH WOULD BE THE NEXT STEP
+//    HERE WE SET WHICH WOULD THE NEXT STEP BE 
 //
 ////////////////////////////////////////////////////
 void GetNextStep( void )
@@ -73,11 +73,12 @@ void GetNextStep( void )
     {
       int right = readRight();
       int left = readLeft();
-      
+
+      //we do not care about the speed here, just turn slow and check again in that state, 
+      //if things got more complicated then switch to full turning but we will know which Direction
       if(right <= left)
       {
-        //we do not care about the speed here, just turn slow and check again in that state, 
-        //if things got more complicated then switch to full turning but we will know which Direction
+
         glState = eTurnRight;          
       }
       else
@@ -86,6 +87,7 @@ void GetNextStep( void )
       }
       break;
     }
+
     case eMoveForward:
     {
       int right = readRight();
@@ -95,28 +97,20 @@ void GetNextStep( void )
       {
         //we stay moving forward untin one of the sensors register something
         delay( SENSING_INTERVALS );
+        int right = readRight();
+        int left = readLeft();
       }
 
       glState = left <= right ? eTurnLeft : eTurnRight;
       break;
     }
-    case eMoveBackwards:
-    {
-      //no often, only try this step in case of error
-      glState = ;
-      break;
-    }
+
     case eTurnLeft:
     {
-      glState = ;
-      break;
-    }
-    case eTurnRight:
-    {
-      int right = readLeft();
+      int right = readRight();
       if(right < OBJECT_TOO_CLOSE)
       {
-        glState = eTurnFullRight;          
+        glState = eTurnFullLeft;          
       }
       else if(right > NO_OBJECT)
       {
@@ -124,11 +118,29 @@ void GetNextStep( void )
       }
       else
       {
-        glState = eTurnRight
+        glState = eTurnLeft;
       }
-      glState = ;
       break;
     }
+
+    case eTurnRight:
+    {
+      int left = readLeft();
+      if(left < OBJECT_TOO_CLOSE)
+      {
+        glState = eTurnFullRight;          
+      }
+      else if(left > NO_OBJECT)
+      {
+        glState = eMoveForward;
+      }
+      else
+      {
+        glState = eTurnRight;
+      }
+      break;
+    }
+
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
@@ -139,6 +151,7 @@ void GetNextStep( void )
       }
       break;
     }
+
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
@@ -149,6 +162,14 @@ void GetNextStep( void )
       }
       break;
     }
+
+    case eMoveBackwards:
+    {
+      //no often, only try this step in case of error
+      glState = ;
+      break;
+    }
+
     default:
     {
       glState = eIdle;
@@ -206,18 +227,30 @@ void eStateMoveBackwards(int Speed)
   setLeft(BACKWARDS, Speed);
 }
 
-void eStateTurnLeft(int Speed)
+void eStateTurnFullLeft(int Speed)
 {
   eStateBeIdle();
   setRight(BACKWARDS, Speed);
   setLeft(FORWARD, Speed);
 }
 
-void eStateTurnRight(int Speed)
+void eStateTurnFullRight(int Speed)
 {
   eStateBeIdle();
   setRight(FORWARD, Speed);
   setLeft(BACKWARDS, Speed);
+}
+
+void eStateTurnRight(int Speed)
+{
+  eStateBeIdle();
+  setRight(FORWARD, Speed);
+}
+ 
+void eStateTurnLeft(int Speed)
+{
+  eStateBeIdle();
+  setLeft(FORWARD, Speed);
 }
 
 void setRight(bool Direction, int Speed)
@@ -238,28 +271,6 @@ void setLeft(bool Direction, int Speed)
   analogWrite(EnableLeft, Speed);
 }
 
-void eStateOneRight(int Speed)
-{
-  eStateBeIdle();
-  setRight(FORWARD, Speed);
-}
- 
-void eStateOneLeft(int Speed)
-{
-  eStateBeIdle();
-  setLeft(FORWARD, Speed);
-}
-
-void rightSensor( void )
-{
-  rightSensorTriggered = HIGH;
-}
-
-void leftSensor( void )
-{
-  leftSensorTriggered = HIGH;
-}
-
 void DoStep( void )
 {
   switch (glState)
@@ -269,38 +280,45 @@ void DoStep( void )
       eStateBeIdle();
       break;
     }
+
     case eMoveForward:
     {
       eStateMoveForward(glSpeed);
       break;
     }
+
     case eMoveBackwards:
     {
       eStateMoveBackwards(glSpeed);
       break;
     }
+
     case eTurnLeft:
     {
       eStateTurnLeft(glSpeed);
       break;
     }
+
     case eTurnRight:
     {
       eStateTurnRight(glSpeed);
       break;
     }
+
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
       eStateTurnFullLeft(glSpeed);
       break;
     }
+
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
       eStateTurnFullRight(glSpeed);
       break;
     }
+
     default:
     {
       eStateBeIdle();
