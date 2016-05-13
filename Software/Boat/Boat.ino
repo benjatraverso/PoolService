@@ -6,15 +6,18 @@ const byte MotorLB = 7;   // Control pin Backward for left motor
 const byte MotorRF = 12;  // Control pin Forward for right motor
 const byte MotorRB = 13;  // Control pin Backward for right motor
 
-const bool FORWARD    = 1;
-const bool BACKWARDS  = 0;
-const byte NORMAL_SPEED = 100;
-const byte LOW_SPEED = 75;
-const byte HIGH_SPEED = 125;
-const byte leftProximitySensor = 0; //analog input 0 reads left sensor
-const byte rightProximitySensor = 1; //analog input 1 reads right sensor
-const byte leftSensorEmitter = 5;
-const byte rightSensorEmitter = 6;
+const bool FORWARD              = 1;
+const bool BACKWARDS            = 0;
+const byte NORMAL_SPEED         = 100;
+const byte LOW_SPEED            = 75;
+const byte HIGH_SPEED           = 125;
+const byte leftProximitySensor  = 0;   //analog input 0 reads left sensor
+const byte rightProximitySensor = 1;   //analog input 1 reads right sensor
+const byte leftSensorEmitter    = 5;
+const byte rightSensorEmitter   = 6;
+
+const int NO_OBJECT         = 800;
+const int OBJECT_TOO_CLOSE  = 400;
 
 enum States
 {
@@ -39,17 +42,15 @@ void setup()
   pinMode(EnableRight, OUTPUT);//same for right one
   pinmode(rightSensorEmitter, OUTPUT);
   pinmode(leftSensorEmitter, OUTPUT);
-
+  //both start off
+  digitalWrite(rightSensorEmitter, LOW);
+  digitalWrite(leftSensorEmitter, LOW);
+  
   //set al motor connected pins as output
   pinMode(MotorLF, OUTPUT);
   pinMode(MotorLB, OUTPUT);
   pinMode(MotorRF, OUTPUT);
   pinMode(MotorRB, OUTPUT);
-
-  pinMode(proximitySensor, INPUT_PULLUP);
-  //pin2 es interrupción 0, acoplo ahí el sensor de cercanía con cambio de estado
-  attachInterrupt( digitalPinToInterrupt(rigthProximitySensor), rightSensor, CHANGE );
-  attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftSensor, CHANGE );
 }
 
 // the loop function runs over and over again until power down or reset
@@ -66,13 +67,30 @@ void GetNextStep( void )
   {
     case eIdle:
     {
-      glState = ;
+      int right = readRight();
+      int left = readLeft();
+      
+      if(right <= left)
+      {
+        //we do not care about the speed here, just turn slow and check again in that state, 
+        //if things got more complicated then switch to full turning but we will know which Direction
+        glState = eTurnRight;          
+      }
+      else
+      {
+        glState = eTurnLeft;
+      }
       break;
     }
     case eMoveForward:
     {
-      //TODO: check sensors and delay, stay if nothing, change if any sensor is active
-      glState = ;
+      int right = readRight();
+      int left = readLeft();
+      
+      if(right < NO_OBJECT || left < NO_OBJECT)
+      {
+        glState = left < right ? eTurnLeft : eTurnRight;
+      }
       break;
     }
     case eMoveBackwards:
@@ -88,19 +106,40 @@ void GetNextStep( void )
     }
     case eTurnRight:
     {
+      int right = readLeft();
+      if(right < OBJECT_TOO_CLOSE)
+      {
+        glState = eTurnFullRight;          
+      }
+      else if(right > NO_OBJECT)
+      {
+        glState = eMoveForward;
+      }
+      else
+      {
+        glState = eTurnRight
+      }
       glState = ;
       break;
     }
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
-      glState = ;
+      int right = readRight();
+      if(right < OBJECT_TOO_CLOSE)
+      {
+        glState = eTurnLeft();
+      }
       break;
     }
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
-      glState = ;
+      int left = readLeft();
+      if(left < OBJECT_TOO_CLOSE)
+      {
+        glState = eTurnRight();
+      }
       break;
     }
     default:
