@@ -1,3 +1,6 @@
+//----------------------------------------------------------------------------
+//                            CONSTANTS
+//----------------------------------------------------------------------------
 const byte EnableLeft = 11;   // Enable Pin for left motor
 const byte EnableRight = 10;  // Enable Pin for right motor
 
@@ -8,18 +11,23 @@ const byte MotorRB = 13;  // Control pin Backward for right motor
 
 const bool FORWARD              = 1;
 const bool BACKWARDS            = 0;
-const byte NORMAL_SPEED         = 100;
-const byte LOW_SPEED            = 75;
-const byte HIGH_SPEED           = 125;
+
 const byte leftProximitySensor  = 0;   //analog input 0 reads left sensor
 const byte rightProximitySensor = 1;   //analog input 1 reads right sensor
 const byte leftSensorEmitter    = 5;
 const byte rightSensorEmitter   = 6;
 
+const byte NORMAL_SPEED         = 100;
+const byte LOW_SPEED            = 75;
+const byte HIGH_SPEED           = 125;
 const int NO_OBJECT         = 800;
 const int OBJECT_TOO_CLOSE  = 400;
 const int SENSING_INTERVALS = 2000;   //reading sensors every 2 seconds
+const int STEPS_DELAY       = 3000;
 
+//----------------------------------------------------------------------------
+//                            ENUMS
+//----------------------------------------------------------------------------
 enum States
 {
   eIdle = 0,
@@ -32,9 +40,15 @@ enum States
   eError
 };
 
+//----------------------------------------------------------------------------
+//                            GLOBAL VARIABLES
+//----------------------------------------------------------------------------
 int glState;
 int glSpeed = NORMAL_SPEED;
 
+//----------------------------------------------------------------------------
+//                            SETUP
+//----------------------------------------------------------------------------
 void setup()
 {
   glState = eIdle;
@@ -43,6 +57,7 @@ void setup()
   pinMode(EnableRight, OUTPUT);//same for right one
   pinmode(rightSensorEmitter, OUTPUT);
   pinmode(leftSensorEmitter, OUTPUT);
+
   //both start off
   digitalWrite(rightSensorEmitter, LOW);
   digitalWrite(leftSensorEmitter, LOW);
@@ -54,51 +69,49 @@ void setup()
   pinMode(MotorRB, OUTPUT);
 }
 
+//----------------------------------------------------------------------------
+//                            LOOP
+//----------------------------------------------------------------------------
 void loop()
 {
   DoStep();
   GetNextStep();
 }
 
-////////////////////////////////////////////////////
-//
-//    HERE WE SET WHICH WOULD THE NEXT STEP BE 
-//
-////////////////////////////////////////////////////
+//----------------------------------------------------------------------------
+//                            NEXT STATE
+//----------------------------------------------------------------------------
 void GetNextStep( void )
 {
+  int right = readRight();
+  int left = readLeft();
+
   switch (glState)
   {
     case eIdle:
     {
-      int right = readRight();
-      int left = readLeft();
-
-      //we do not care about the speed here, just turn slow and check again in that state, 
+      //we do not care about the speed here, just normal turn (one motor) and check again later once in that state,
       //if things got more complicated then switch to full turning but we will know which Direction
       if(right <= left)
       {
-
         glState = eTurnRight;          
       }
       else
       {
         glState = eTurnLeft;
       }
+
       break;
     }
 
     case eMoveForward:
     {
-      int right = readRight();
-      int left = readLeft();
-      
       while(right < NO_OBJECT && left < NO_OBJECT)
       {
-        //we stay moving forward untin one of the sensors register something
+        //we stay moving forward untin one of the sensors register something significant
         delay( SENSING_INTERVALS );
-        int right = readRight();
-        int left = readLeft();
+        right = readRight();
+        left = readLeft();
       }
 
       glState = left <= right ? eTurnLeft : eTurnRight;
@@ -107,76 +120,94 @@ void GetNextStep( void )
 
     case eTurnLeft:
     {
-      int right = readRight();
+      while(right < NO_OBJECT)
+      {
+        //stay same state and pool sensor
+        delay( STEPS_DELAY );
+        right = readRight();
+      }
+
       if(right < OBJECT_TOO_CLOSE)
       {
         glState = eTurnFullLeft;          
       }
-      else if(right > NO_OBJECT)
+      else(right > NO_OBJECT)
       {
         glState = eMoveForward;
       }
-      else
-      {
-        glState = eTurnLeft;
-      }
+
       break;
     }
 
     case eTurnRight:
     {
-      int left = readLeft();
+      while(left < NO_OBJECT)
+      {
+        //stay same state and pool sensor
+        delay( STEPS_DELAY );
+        left = readLeft();
+      }
+
       if(left < OBJECT_TOO_CLOSE)
       {
         glState = eTurnFullRight;          
       }
-      else if(left > NO_OBJECT)
+      else(left > NO_OBJECT)
       {
         glState = eMoveForward;
       }
-      else
-      {
-        glState = eTurnRight;
-      }
+
       break;
     }
 
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
-      int right = readRight();
-      if(right < OBJECT_TOO_CLOSE)
+      while( right < OBJECT_TOO_CLOSE )
       {
-        glState = eTurnLeft();
+        delay( STEPS_DELAY );
+        right = readRight();
       }
+
+      glState = eTurnLeft();
       break;
     }
 
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
-      int left = readLeft();
-      if(left < OBJECT_TOO_CLOSE)
+      while( left < OBJECT_TOO_CLOSE )
       {
-        glState = eTurnRight();
+        left = readLeft();
+        delay( STEPS_DELAY );
       }
+
+      glState = eTurnRight();
       break;
     }
 
-    case eMoveBackwards:
+    case eError:
     {
       //no often, only try this step in case of error
-      glState = ;
+      //all logic is inside the step function.
+      //start over from idle for we don't know where are we
+      glState = eIdle;
       break;
     }
 
     default:
     {
+      //we should never be here, but..., just in case
       glState = eIdle;
     }
   }
 }
 
+//----------------------------------------------------------------------------
+//                            SENSORS
+//----------------------------------------------------------------------------
+// TODO: turning sensor emitter on can be through PWM to decrease
+// power consumtion
 int readLeft( void )
 {
   digitalWrite(leftSensorEmitter, HIGH);
@@ -199,6 +230,9 @@ int readRight( void )
   return lecture;
 }
 
+//----------------------------------------------------------------------------
+//                                STATES
+//----------------------------------------------------------------------------
 void eStateBeIdle()
 {
   //can not have delays for many steps may use it to stop motors first
@@ -212,65 +246,83 @@ void eStateBeIdle()
   analogWrite(EnableRight, 0);
 }
 
-void eStateMoveForward(int Speed)
+void eStateMoveForward()
 {
   // always go to idle first to avoid enabling both pins of motor
   eStateBeIdle(); 
-  setRight(FORWARD, Speed);
-  setLeft(FORWARD, Speed);
+  setRight(FORWARD, glSpeed);
+  setLeft(FORWARD, glSpeed);
 }
 
-void eStateMoveBackwards(int Speed)
+void eStateMoveBackwards()
 {
-  eStateBeIdle();
-  setRight(BACKWARDS, Speed);
-  setLeft(BACKWARDS, Speed);
+  // always go to idle first to avoid enabling both pins of motor
+  eStateBeIdle(); 
+  setRight(BACKWARDS, glSpeed);
+  setLeft(BACKWARDS, glSpeed);
 }
 
-void eStateTurnFullLeft(int Speed)
+void eStateTurnFullLeft()
 {
   eStateBeIdle();
-  setRight(BACKWARDS, Speed);
-  setLeft(FORWARD, Speed);
+  setRight(BACKWARDS, glSpeed);
+  setLeft(FORWARD, glSpeed);
 }
 
-void eStateTurnFullRight(int Speed)
+void eStateTurnFullRight()
 {
   eStateBeIdle();
-  setRight(FORWARD, Speed);
-  setLeft(BACKWARDS, Speed);
+  setRight(FORWARD, glSpeed);
+  setLeft(BACKWARDS, glSpeed);
 }
 
-void eStateTurnRight(int Speed)
+void eStateTurnRight()
 {
   eStateBeIdle();
-  setRight(FORWARD, Speed);
+  setRight(FORWARD, glSpeed);
 }
  
-void eStateTurnLeft(int Speed)
+void eStateTurnLeft()
 {
   eStateBeIdle();
-  setLeft(FORWARD, Speed);
+  setLeft(FORWARD, glSpeed);
 }
 
-void setRight(bool Direction, int Speed)
+void setRight( bool Direction )
 {
-  Serial.println("RightMotor: ");
-  Serial.println(Direction);
   digitalWrite(MotorRF, Direction);
   digitalWrite(MotorRB, !Direction);
-  analogWrite(EnableRight, Speed);
+  analogWrite(EnableRight, glSpeed);
 }
 
-void setLeft(bool Direction, int Speed)
+void setLeft( bool Direction )
 {
-  Serial.println("LeftMotor: ");
-  Serial.println(Direction);
   digitalWrite(MotorLF, Direction);
   digitalWrite(MotorLB, !Direction);
-  analogWrite(EnableLeft, Speed);
+  analogWrite(EnableLeft, glSpeed);
 }
 
+void eStateError( void )
+{
+  //full speed for all this attempts
+  glSpeed = HIGH_SPEED;
+  //be idle and move back
+  eStateMoveBackwards();
+  //keep pushing back for a while
+  delay( STEPS_DELAY );
+  //shake a little
+  eStateTurnFullLeft();
+  delay( STEPS_DELAY );
+  eStateTurnFullRight();
+  delay( STEPS_DELAY );
+  //end, this will put me on idle later, let's hope the mad dance made it
+  //get stuff back to normal
+  glSpeed = NORMAL_SPEED;
+}
+
+//----------------------------------------------------------------------------
+//                            CURRENT STATE
+//----------------------------------------------------------------------------
 void DoStep( void )
 {
   switch (glState)
@@ -283,39 +335,39 @@ void DoStep( void )
 
     case eMoveForward:
     {
-      eStateMoveForward(glSpeed);
-      break;
-    }
-
-    case eMoveBackwards:
-    {
-      eStateMoveBackwards(glSpeed);
+      eStateMoveForward();
       break;
     }
 
     case eTurnLeft:
     {
-      eStateTurnLeft(glSpeed);
+      eStateTurnLeft();
       break;
     }
 
     case eTurnRight:
     {
-      eStateTurnRight(glSpeed);
+      eStateTurnRight();
       break;
     }
 
     case eTurnFullLeft:
     {
       //sensor level warning went to urgent
-      eStateTurnFullLeft(glSpeed);
+      eStateTurnFullLeft();
       break;
     }
 
     case eTurnFullRight:
     {
       //sensor level warning went to urgent
-      eStateTurnFullRight(glSpeed);
+      eStateTurnFullRight();
+      break;
+    }
+
+    case eError:
+    {
+      eStateError();
       break;
     }
 
