@@ -1,0 +1,50 @@
+Added Component: Designator=Xtal1(Xtal)
+Added Pin To Net: NetName=VCC Pin=U3-16
+Added Pin To Net: NetName=NetC4_1 Pin=Xtal1-1
+Added Pin To Net: NetName=NetC3_1 Pin=Xtal1-2
+Added Member To Class: ClassName=Gral Member=Component C1 Cap
+Added Member To Class: ClassName=Gral Member=Component C2 Cap
+Added Member To Class: ClassName=Gral Member=Component C3 Cap
+Added Member To Class: ClassName=Gral Member=Component C4 Cap
+Added Member To Class: ClassName=Gral Member=Component C5 Cap
+Added Member To Class: ClassName=Gral Member=Component C6 Cap
+Added Member To Class: ClassName=Gral Member=Component C7 Cap
+Added Member To Class: ClassName=Gral Member=Component C8 Cap
+Added Member To Class: ClassName=Gral Member=Component C9 Cap
+Added Member To Class: ClassName=Gral Member=Component C10 Cap
+Added Member To Class: ClassName=Perifericos Member=Component C11 Cap
+Added Member To Class: ClassName=Gral Member=Component C12 Cap
+Added Member To Class: ClassName=Gral Member=Component C15 Cap
+Added Member To Class: ClassName=Gral Member=Component D0 
+Added Member To Class: ClassName=Perifericos Member=Component D1 Diode 1N4148
+Added Member To Class: ClassName=Perifericos Member=Component P1 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P2 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P3 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P6 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P7 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P8 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P9 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P10 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P11 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P12 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P13 Header 2
+Added Member To Class: ClassName=Perifericos Member=Component P14 Header 6
+Added Member To Class: ClassName=Perifericos Member=Component P15 Header 2
+Added Member To Class: ClassName=Gral Member=Component Q1 Photo NPN
+Added Member To Class: ClassName=Gral Member=Component R1 Res1
+Added Member To Class: ClassName=Gral Member=Component R2 Res1
+Added Member To Class: ClassName=Gral Member=Component R3 Res1
+Added Member To Class: ClassName=Gral Member=Component R4 Res1
+Added Member To Class: ClassName=Perifericos Member=Component R5 Res2
+Added Member To Class: ClassName=Perifericos Member=Component R6 Res2
+Added Member To Class: ClassName=Perifericos Member=Component Rled1 Res2
+Added Member To Class: ClassName=Perifericos Member=Component Rled2 Res2
+Added Member To Class: ClassName=Perifericos Member=Component Rled3 Res2
+Added Member To Class: ClassName=Perifericos Member=Component Rled4 Res2
+Added Member To Class: ClassName=Gral Member=Component U1 ATmega328P-PU
+Added Member To Class: ClassName=Gral Member=Component U2 LM2930-8KC
+Added Member To Class: ClassName=Gral Member=Component U3 L293NE
+Added Member To Class: ClassName=Gral Member=Component U4 LM358AP
+Added Member To Class: ClassName=Gral Member=Component Xtal1 Xtal
+Added Room: Name=Gral
+Added Room: Name=Perifericos
