@@ -37,6 +37,8 @@ enum States
   eTurnLeft,
   eFullTurnLeft,
   eFullTurnright,
+  eTurnFullRight,
+  eTurnFullLeft,
   eError
 };
 
@@ -55,8 +57,8 @@ void setup()
   Serial.begin(9600);
   pinMode(EnableLeft, OUTPUT); //set enable motor pin as output
   pinMode(EnableRight, OUTPUT);//same for right one
-  pinmode(rightSensorEmitter, OUTPUT);
-  pinmode(leftSensorEmitter, OUTPUT);
+  pinMode(rightSensorEmitter, OUTPUT);
+  pinMode(leftSensorEmitter, OUTPUT);
 
   //both start off
   digitalWrite(rightSensorEmitter, LOW);
@@ -127,11 +129,11 @@ void GetNextStep( void )
         right = readRight();
       }
 
-      if(right < OBJECT_TOO_CLOSE)
+      if( right < OBJECT_TOO_CLOSE )
       {
         glState = eTurnFullLeft;          
       }
-      else(right > NO_OBJECT)
+      else if( right > NO_OBJECT )
       {
         glState = eMoveForward;
       }
@@ -152,7 +154,7 @@ void GetNextStep( void )
       {
         glState = eTurnFullRight;          
       }
-      else(left > NO_OBJECT)
+      else if(left > NO_OBJECT)
       {
         glState = eMoveForward;
       }
@@ -169,7 +171,7 @@ void GetNextStep( void )
         right = readRight();
       }
 
-      glState = eTurnLeft();
+      glState = eTurnLeft;
       break;
     }
 
@@ -182,7 +184,7 @@ void GetNextStep( void )
         delay( STEPS_DELAY );
       }
 
-      glState = eTurnRight();
+      glState = eTurnRight;
       break;
     }
 
@@ -233,7 +235,7 @@ int readRight( void )
 //----------------------------------------------------------------------------
 //                                STATES
 //----------------------------------------------------------------------------
-void eStateBeIdle()
+void eStateBeIdle( void )
 {
   //can not have delays for many steps may use it to stop motors first
   digitalWrite(MotorLF, LOW);
@@ -246,46 +248,46 @@ void eStateBeIdle()
   analogWrite(EnableRight, 0);
 }
 
-void eStateMoveForward()
+void eStateMoveForward( void )
 {
   // always go to idle first to avoid enabling both pins of motor
   eStateBeIdle(); 
-  setRight(FORWARD, glSpeed);
-  setLeft(FORWARD, glSpeed);
+  setRight(FORWARD);
+  setLeft(FORWARD);
 }
 
-void eStateMoveBackwards()
+void eStateMoveBackwards( void )
 {
   // always go to idle first to avoid enabling both pins of motor
   eStateBeIdle(); 
-  setRight(BACKWARDS, glSpeed);
-  setLeft(BACKWARDS, glSpeed);
+  setRight(BACKWARDS);
+  setLeft(BACKWARDS);
 }
 
-void eStateTurnFullLeft()
+void eStateTurnFullLeft( void )
 {
   eStateBeIdle();
-  setRight(BACKWARDS, glSpeed);
-  setLeft(FORWARD, glSpeed);
+  setRight(BACKWARDS);
+  setLeft(FORWARD);
 }
 
-void eStateTurnFullRight()
+void eStateTurnFullRight( void )
 {
   eStateBeIdle();
-  setRight(FORWARD, glSpeed);
-  setLeft(BACKWARDS, glSpeed);
+  setRight(FORWARD);
+  setLeft(BACKWARDS);
 }
 
-void eStateTurnRight()
+void eStateTurnRight( void )
 {
   eStateBeIdle();
-  setRight(FORWARD, glSpeed);
+  setRight(FORWARD);
 }
  
-void eStateTurnLeft()
+void eStateTurnLeft( void )
 {
   eStateBeIdle();
-  setLeft(FORWARD, glSpeed);
+  setLeft(FORWARD);
 }
 
 void setRight( bool Direction )
