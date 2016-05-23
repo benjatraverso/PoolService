@@ -1,0 +1,2 @@
+1.0: Versión con sensores conectados a analogIn y lecturas de distancia.
+1.1: Versión con sensores a digital por interrupciones.
