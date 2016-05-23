@@ -22,8 +22,12 @@ void setup()
   Serial.begin(9600);//for testing purposes
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
-  pinMode( rightSensorEmitter, OUTPUT );
-  pinMode( leftSensorEmitter, OUTPUT );
+
+  pinMode(rightProximitySensor, INPUT_PULLUP);
+  attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, CHANGE );
+
+  pinMode(leftProximitySensor, INPUT_PULLUP);
+  attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, CHANGE );
 
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
@@ -145,6 +149,7 @@ void loop( void )
 
     case eError:
     {
+      inError();
       //no often, only try this step in case of error
       //all logic is inside the step function.
       //start over from idle for we don't know where are we
