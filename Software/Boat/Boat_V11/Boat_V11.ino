@@ -18,8 +18,8 @@ int glSpeed = NORMAL_SPEED;
 //----------------------------------------------------------------------------
 void setup()
 {
-  glState = eIdle;
-  Serial.begin(9600);
+  glState = eError; //start on error to test the most movements we can on launch
+  Serial.begin(9600);//for testing purposes
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
   pinMode( rightSensorEmitter, OUTPUT );
@@ -38,16 +38,7 @@ void setup()
 //----------------------------------------------------------------------------
 //                            LOOP
 //----------------------------------------------------------------------------
-void loop()
-{
-  DoStep();
-  GetNextStep();
-}
-
-//----------------------------------------------------------------------------
-//                            NEXT STATE
-//----------------------------------------------------------------------------
-void GetNextStep( void )
+void loop( void )
 {
   int right = readRight();
   int left = readLeft();
@@ -197,48 +188,48 @@ int readRight( void )
 }
 
 //----------------------------------------------------------------------------
-//                                STATES
+//                                MOVEMENTS
 //----------------------------------------------------------------------------
-void eStateBeIdle( void )
+void beIdle( void )
 {
   //can not have delays for many steps may use it to stop motors first
   killRight();
   killLeft();
 }
 
-void eStateMoveForward( void )
+void moveForward( void )
 {
   // always go to idle first to avoid enabling both pins of motor
   setRight(FORWARD);
   setLeft(FORWARD);
 }
 
-void eStateMoveBackwards( void )
+void moveBackwards( void )
 {
   // always go to idle first to avoid enabling both pins of motor
   setRight(BACKWARDS);
   setLeft(BACKWARDS);
 }
 
-void eStateTurnFullLeft( void )
+void turnFullLeft( void )
 {
   setRight(BACKWARDS);
   setLeft(FORWARD);
 }
 
-void eStateTurnFullRight( void )
+void turnFullRight( void )
 {
   setRight(FORWARD);
   setLeft(BACKWARDS);
 }
 
-void eStateTurnRight( void )
+void turnRight( void )
 {
   killLeft();
   setRight(FORWARD);
 }
  
-void eStateTurnLeft( void )
+void turnLeft( void )
 {
   killRight();
   setLeft(FORWARD);
@@ -274,78 +265,20 @@ void killLeft( void )
   digitalWrite( EnableLeft, LOW );
 }
 
-void eStateError( void )
+void inError( void )
 {
   //full speed for all this attempts
   glSpeed = HIGH_SPEED;
   //be idle and move back
-  eStateMoveBackwards();
+  moveBackwards();
   //keep pushing back for a while
   delay( STEPS_DELAY );
   //shake a little
-  eStateTurnFullLeft();
+  turnFullLeft();
   delay( STEPS_DELAY );
-  eStateTurnFullRight();
+  turnFullRight();
   delay( STEPS_DELAY );
   //end, this will put me on idle later, let's hope the mad dance made it
   //get stuff back to normal
   glSpeed = NORMAL_SPEED;
-}
-
-//----------------------------------------------------------------------------
-//                            CURRENT STATE
-//----------------------------------------------------------------------------
-void DoStep( void )
-{
-  switch ( glState )
-  {
-    case eIdle:
-    {
-      eStateBeIdle();
-      break;
-    }
-
-    case eMoveForward:
-    {
-      eStateMoveForward();
-      break;
-    }
-
-    case eTurnLeft:
-    {
-      eStateTurnLeft();
-      break;
-    }
-
-    case eTurnRight:
-    {
-      eStateTurnRight();
-      break;
-    }
-
-    case eTurnFullLeft:
-    {
-      //sensor level warning went to urgent
-      eStateTurnFullLeft();
-      break;
-    }
-
-    case eTurnFullRight:
-    {
-      //sensor level warning went to urgent
-      eStateTurnFullRight();
-      break;
-    }
-
-    case eError:
-    {
-      eStateError();
-      break;
-    }
-
-    default:
-    {
-      eStateBeIdle();
-    }
-  }
 }
