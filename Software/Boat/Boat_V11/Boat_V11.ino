@@ -25,15 +25,14 @@ void setup()
   pinMode( rightSensorEmitter, OUTPUT );
   pinMode( leftSensorEmitter, OUTPUT );
 
-  //both start off
-  digitalWrite( rightSensorEmitter, LOW );
-  digitalWrite( leftSensorEmitter, LOW );
-  
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
   pinMode( MotorLB, OUTPUT );
   pinMode( MotorRF, OUTPUT );
   pinMode( MotorRB, OUTPUT );
+
+  // start with everything dead
+  eStateBeIdle();
 }
 
 //----------------------------------------------------------------------------
@@ -298,7 +297,7 @@ void eStateError( void )
 //----------------------------------------------------------------------------
 void DoStep( void )
 {
-  switch (glState)
+  switch ( glState )
   {
     case eIdle:
     {
