@@ -20,20 +20,20 @@ void setup()
 {
   glState = eIdle;
   Serial.begin(9600);
-  pinMode(EnableLeft, OUTPUT); //set enable motor pin as output
-  pinMode(EnableRight, OUTPUT);//same for right one
-  pinMode(rightSensorEmitter, OUTPUT);
-  pinMode(leftSensorEmitter, OUTPUT);
+  pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
+  pinMode( EnableRight, OUTPUT );//same for right one
+  pinMode( rightSensorEmitter, OUTPUT );
+  pinMode( leftSensorEmitter, OUTPUT );
 
   //both start off
-  digitalWrite(rightSensorEmitter, LOW);
-  digitalWrite(leftSensorEmitter, LOW);
+  digitalWrite( rightSensorEmitter, LOW );
+  digitalWrite( leftSensorEmitter, LOW );
   
   //set al motor connected pins as output
-  pinMode(MotorLF, OUTPUT);
-  pinMode(MotorLB, OUTPUT);
-  pinMode(MotorRF, OUTPUT);
-  pinMode(MotorRB, OUTPUT);
+  pinMode( MotorLF, OUTPUT );
+  pinMode( MotorLB, OUTPUT );
+  pinMode( MotorRF, OUTPUT );
+  pinMode( MotorRB, OUTPUT );
 }
 
 //----------------------------------------------------------------------------
@@ -177,23 +177,23 @@ void GetNextStep( void )
 // power consumtion
 int readLeft( void )
 {
-  digitalWrite(leftSensorEmitter, HIGH);
+  digitalWrite( leftSensorEmitter, HIGH );
   delay(1);//minimal time to wait to get a valid data
-  int lecture = analogRead(leftProximitySensor);
+  int lecture = analogRead( leftProximitySensor );
 
   //leave emitter off for lowering consumtion
-  digitalWrite(leftSensorEmitter, LOW);
+  digitalWrite( leftSensorEmitter, LOW );
   return lecture;
 }
 
 int readRight( void )
 {
-  digitalWrite(rightSensorEmitter, HIGH);
+  digitalWrite( rightSensorEmitter, HIGH );
   delay(1);//minimal time to wait to get a valid data
-  int lecture = analogRead(rightProximitySensor);
+  int lecture = analogRead( rightProximitySensor );
 
   //leave emitter off for lowering consumtion
-  digitalWrite(rightSensorEmitter, LOW);
+  digitalWrite( rightSensorEmitter, LOW );
   return lecture;
 }
 
@@ -203,20 +203,13 @@ int readRight( void )
 void eStateBeIdle( void )
 {
   //can not have delays for many steps may use it to stop motors first
-  digitalWrite(MotorLF, LOW);
-  digitalWrite(MotorLB, LOW);
-  digitalWrite(MotorRF, LOW);
-  digitalWrite(MotorRB, LOW);
-  
-  //disable both motors
-  analogWrite(EnableLeft, 0);
-  analogWrite(EnableRight, 0);
+  killRight();
+  killLeft();
 }
 
 void eStateMoveForward( void )
 {
   // always go to idle first to avoid enabling both pins of motor
-  eStateBeIdle(); 
   setRight(FORWARD);
   setLeft(FORWARD);
 }
@@ -224,49 +217,62 @@ void eStateMoveForward( void )
 void eStateMoveBackwards( void )
 {
   // always go to idle first to avoid enabling both pins of motor
-  eStateBeIdle(); 
   setRight(BACKWARDS);
   setLeft(BACKWARDS);
 }
 
 void eStateTurnFullLeft( void )
 {
-  eStateBeIdle();
   setRight(BACKWARDS);
   setLeft(FORWARD);
 }
 
 void eStateTurnFullRight( void )
 {
-  eStateBeIdle();
   setRight(FORWARD);
   setLeft(BACKWARDS);
 }
 
 void eStateTurnRight( void )
 {
-  eStateBeIdle();
+  killLeft();
   setRight(FORWARD);
 }
  
 void eStateTurnLeft( void )
 {
-  eStateBeIdle();
+  killRight();
   setLeft(FORWARD);
 }
 
 void setRight( bool Direction )
 {
-  digitalWrite(MotorRF, Direction);
-  digitalWrite(MotorRB, !Direction);
-  analogWrite(EnableRight, glSpeed);
+  killRight();
+  digitalWrite( MotorRF, Direction );
+  digitalWrite( MotorRB, !Direction );
+  analogWrite( EnableRight, glSpeed );
 }
 
 void setLeft( bool Direction )
 {
-  digitalWrite(MotorLF, Direction);
-  digitalWrite(MotorLB, !Direction);
-  analogWrite(EnableLeft, glSpeed);
+  killLeft();
+  digitalWrite( MotorLF, Direction );
+  digitalWrite( MotorLB, !Direction );
+  analogWrite( EnableLeft, glSpeed );
+}
+
+void killRight( void )
+{
+  digitalWrite( MotorRF, Direction );
+  digitalWrite( MotorRB, !Direction );
+  digitalWrite( EnableRight, LOW );
+}
+
+void killLeft( void )
+{
+  digitalWrite( MotorLF, LOW );
+  digitalWrite( MotorLB, LOW );
+  digitalWrite( EnableLeft, LOW );
 }
 
 void eStateError( void )
