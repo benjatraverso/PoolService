@@ -75,3 +75,27 @@ void killLeft( void )
   digitalWrite( MotorLB, LOW );
   digitalWrite( EnableLeft, LOW );
 }
+
+move( int Direction )
+{
+  if( Direction )
+  {
+    moveForward();
+  }
+  else
+  {
+    moveBackwards();
+  }
+}
+
+turn( bool Way )
+{
+  if( Way )
+  {
+    turnRight();
+  }
+  else
+  {
+    turnLeft();
+  }
+}

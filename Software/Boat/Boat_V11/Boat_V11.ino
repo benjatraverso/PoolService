@@ -56,6 +56,7 @@ void loop( void )
     {
       interrupts();
       eMoveForward();
+      delay(20);
       while(glState == eMoveForward)
       {
         delay( STEPS_DELAY );
@@ -67,13 +68,13 @@ void loop( void )
 
     case eTurnLeft:
     {
-
+      turn(LEFT);
       break;
     }
 
     case eTurnRight:
     {
-
+      turn(RIGHT);
       break;
     }
 
@@ -113,12 +114,14 @@ void loop( void )
 void rightObjectDetected( void )
 {
   noInterrupts();
+  glSide = SIDE_RIGHT;
   glState = eTurnLeft;
 }
 
 void leftObjectDetected( void )
 {
   noInterrupts();
+  glSide = SIDE_LEFT;
   glState = eTurnRight;
 }
 
