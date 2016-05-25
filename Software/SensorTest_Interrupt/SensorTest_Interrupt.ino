@@ -1,23 +1,38 @@
-volatile int sensorTriggered = LOW;
+volatile int sensorTriggered = -1;
 int proximitySensor = 2;
 
 void setup() {
   Serial.begin( 9600 );//inicio comunicación serie
   pinMode(proximitySensor, INPUT_PULLUP);
-  attachInterrupt( digitalPinToInterrupt(proximitySensor), broadcastSensor, CHANGE );//pin2 es interrupción 0, acoplo ahí el sensor de cercanía con cambio de estado
+  attachInterrupt( digitalPinToInterrupt( proximitySensor ), objectClose, LOW );//pin2 es interrupción 0, acoplo ahí el sensor de cercanía con cambio de estado
 }
 
 void loop() {
-  if(sensorTriggered == HIGH)
+  if(sensorTriggered == 1)
   {
-    Serial.print( "Obstaculo detectado\n" );
-    sensorTriggered = LOW;
-    delay(2000);
+    detachInterrupt( digitalPinToInterrupt( proximitySensor ) );
+    attachInterrupt( digitalPinToInterrupt( proximitySensor ), objectGone, RISING );
+    Serial.print( "Obstaculo cerca\n" );
+    sensorTriggered = -1;
+    delay( 2000 );
+  }
+  else if(sensorTriggered == 0)
+  {
+    detachInterrupt( digitalPinToInterrupt( proximitySensor ) );
+    attachInterrupt( digitalPinToInterrupt( proximitySensor ), objectClose, LOW );
+    Serial.print( "Obstaculo se alejo\n" );
+    sensorTriggered = -1;
+    delay( 2000 );
   }
 }
 
-void broadcastSensor( void )
+void objectClose( void )
 {
-  sensorTriggered = HIGH;
+  sensorTriggered = 1;
+}
+
+void objectGone( void )
+{
+  sensorTriggered = 0;
 }
 
