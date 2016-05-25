@@ -16,7 +16,7 @@ void loop()
   int val = leer();
   Serial.print("With IR on lecture\t");
   Serial.println(val);
-  //digitalWrite(emitter,LOW);
+  digitalWrite(emitter,LOW);
   delay(2000);
 }
 
