@@ -9,7 +9,8 @@
 //----------------------------------------------------------------------------
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
-int glState;
+volatile byte glState;
+volatile byte glDirection = NEVERMIND;
 int glSpeed = NORMAL_SPEED;
 
 //----------------------------------------------------------------------------
@@ -20,12 +21,15 @@ void setup()
   Serial.begin(9600);//for testing purposes
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
+  
+  pinMode( leftSensor, OUTPUT );
+  pinMode( rightSensor, OUTPUT );
 
   pinMode(rightProximitySensor, INPUT_PULLUP);
-  attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, CHANGE );
+  attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, LOW );
 
   pinMode(leftProximitySensor, INPUT_PULLUP);
-  attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, CHANGE );
+  attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, LOW );
 
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
@@ -42,7 +46,7 @@ void setup()
 //----------------------------------------------------------------------------
 void loop( void )
 {
-  switch (glState)
+  switch ( glState )
   {
     case eIdle:
     {
@@ -52,8 +56,8 @@ void loop( void )
 
     case eMoveForward:
     {
-      interrupts();
       moveForward();
+      enableSensors();
       delay(20);
       while(glState == eMoveForward)
       {
@@ -64,25 +68,31 @@ void loop( void )
       break;
     }
 
-    case eTurnLeft:
+    case eTurn:
     {
-      turn(LEFT);
+      turn(glDirection);
+      if(glDirection == TURN_RIGHT)
+      {
+        killRightSensor();
+        detachInterrupt(digitalPinToInterrupt(leftProximitySensor));
+        attachInterrupt(digitalPinToInterrupt(leftProximitySensor), noMoreObject, RISING);
+      }
+      else if(glDirection == TURN_LEFT)
+      {
+        killLeftSensor();
+        detachInterrupt(digitalPinToInterrupt(rightProximitySensor));
+        attachInterrupt(digitalPinToInterrupt(rightroximitySensor), noMoreObject, RISING);
+      }
+      
+      while(glState == eTurn)
+      {
+        //stay here as long as the object is still detected
+        //TODO: if been here for too long change to fullturn
+      }
       break;
     }
-
-    case eTurnRight:
-    {
-      turn(RIGHT);
-      break;
-    }
-
-    case eTurnFullLeft:
-    {
-
-      break;
-    }
-
-    case eTurnFullRight:
+    
+    case eTurnFull:
     {
 
       break;
@@ -111,14 +121,20 @@ void loop( void )
 //----------------------------------------------------------------------------
 void rightObjectDetected( void )
 {
-  noInterrupts();
-  glState = eTurnLeft;
+  glDirection = TURN_LEFT;
+  glState = eTurn;
 }
 
 void leftObjectDetected( void )
 {
-  noInterrupts();
-  glState = eTurnRight;
+  glDirection = TURN_RIGHT;
+  glState = eTurn;
+}
+
+void noMoreObject( void )
+{
+  glDirection = NEVERMIND;
+  glState = eMoveForward;
 }
 
 void inError( void )
