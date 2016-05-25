@@ -6,7 +6,6 @@
 //----------------------------------------------------------------------------
 
 #include "Boat.h"
-
 //----------------------------------------------------------------------------
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
@@ -18,7 +17,6 @@ int glSpeed = NORMAL_SPEED;
 //----------------------------------------------------------------------------
 void setup()
 {
-  glState = eError; //start on error to test the most movements we can on launch
   Serial.begin(9600);//for testing purposes
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
@@ -36,7 +34,7 @@ void setup()
   pinMode( MotorRB, OUTPUT );
 
   // start with everything dead
-  eStateBeIdle();
+  glState = eError; //start on error to test the most movements we can on launch
 }
 
 //----------------------------------------------------------------------------
@@ -48,14 +46,14 @@ void loop( void )
   {
     case eIdle:
     {
-
+      beIdle();
       break;
     }
 
     case eMoveForward:
     {
       interrupts();
-      eMoveForward();
+      moveForward();
       delay(20);
       while(glState == eMoveForward)
       {
@@ -114,14 +112,12 @@ void loop( void )
 void rightObjectDetected( void )
 {
   noInterrupts();
-  glSide = SIDE_RIGHT;
   glState = eTurnLeft;
 }
 
 void leftObjectDetected( void )
 {
   noInterrupts();
-  glSide = SIDE_LEFT;
   glState = eTurnRight;
 }
 
@@ -142,3 +138,106 @@ void inError( void )
   //get stuff back to normal
   glSpeed = NORMAL_SPEED;
 }
+
+//----------------------------------------------------------------------------
+//                                MOVEMENTS
+//----------------------------------------------------------------------------
+void beIdle( void )
+{
+  //can not have delays for many steps may use it to stop motors first
+  killRight();
+  killLeft();
+}
+
+void moveForward( void )
+{
+  // always go to idle first to avoid enabling both pins of motor
+  setRight(FORWARD);
+  setLeft(FORWARD);
+}
+
+void moveBackwards( void )
+{
+  // always go to idle first to avoid enabling both pins of motor
+  setRight(BACKWARDS);
+  setLeft(BACKWARDS);
+}
+
+void turnFullLeft( void )
+{
+  setRight(BACKWARDS);
+  setLeft(FORWARD);
+}
+
+void turnFullRight( void )
+{
+  setRight(FORWARD);
+  setLeft(BACKWARDS);
+}
+
+void turnRight( void )
+{
+  killLeft();
+  setRight(FORWARD);
+}
+ 
+void turnLeft( void )
+{
+  killRight();
+  setLeft( FORWARD );
+}
+
+void setRight( bool Direction )
+{
+  killRight();
+  digitalWrite( MotorRF, Direction );
+  digitalWrite( MotorRB, !Direction );
+  analogWrite( EnableRight, glSpeed );
+}
+
+void setLeft( bool Direction )
+{
+  killLeft();
+  digitalWrite( MotorLF, Direction );
+  digitalWrite( MotorLB, !Direction );
+  analogWrite( EnableLeft, glSpeed );
+}
+
+void killRight( void )
+{
+  digitalWrite( MotorRF, LOW );
+  digitalWrite( MotorRB, LOW );
+  digitalWrite( EnableRight, LOW );
+}
+
+void killLeft( void )
+{
+  digitalWrite( MotorLF, LOW );
+  digitalWrite( MotorLB, LOW );
+  digitalWrite( EnableLeft, LOW );
+}
+
+void move( bool Direction )
+{
+  if( Direction )
+  {
+    moveForward();
+  }
+  else
+  {
+    moveBackwards();
+  }
+}
+
+void turn( bool Way )
+{
+  if( Way )
+  {
+    turnRight();
+  }
+  else
+  {
+    turnLeft();
+  }
+}
+
