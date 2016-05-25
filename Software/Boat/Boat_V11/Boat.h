@@ -14,8 +14,8 @@ const byte MotorRB = 13;  // Control pin Backward for right motor
 
 const bool FORWARD              = 1;
 const bool BACKWARDS            = 0;
-const bool RIGHT                = 0;
-const bool LEFT                 = 1;
+const bool RIGHT                = 1;
+const bool LEFT                 = 0;
 
 const byte leftProximitySensor  = 3;   //interrupt input 0 reads left sensor
 const byte rightProximitySensor = 2;   //interrupt input 1 reads right sensor
