@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
-volatile byte glState;
+volatile byte glState = eError;
 volatile byte glDirection = NEVERMIND;
 int glSpeed = NORMAL_SPEED;
 
@@ -26,10 +26,7 @@ void setup()
   pinMode( rightSensor, OUTPUT );
 
   pinMode(rightProximitySensor, INPUT_PULLUP);
-  attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, LOW );
-
   pinMode(leftProximitySensor, INPUT_PULLUP);
-  attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, LOW );
 
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
@@ -57,8 +54,13 @@ void loop( void )
     case eMoveForward:
     {
       moveForward();
+
+      // for moving forward we need to open our eyes
       enableSensors();
+      attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, LOW );
+      attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, LOW );
       delay(20);
+
       while(glState == eMoveForward)
       {
         delay( STEPS_DELAY );
@@ -70,40 +72,67 @@ void loop( void )
 
     case eTurn:
     {
+      // we need to change interrupt for the sensor that detected an object
+      // and we don't need the other one, so we detach both
+      detachInterrupts();
+      // record the much time we spend here...
+      unsigned long timePassed = millis();
+      // do the actual turn's task, turn
       turn(glDirection);
-      if(glDirection == TURN_RIGHT)
+
+      // if we are here an interrupt popedUp, check which way to turn
+      if( glDirection == TURN_RIGHT )
       {
+        // if object detected left, no need to leave right sensor on until we complete turning
         killRightSensor();
-        detachInterrupt(digitalPinToInterrupt(leftProximitySensor));
-        attachInterrupt(digitalPinToInterrupt(leftProximitySensor), noMoreObject, RISING);
+        // we now need sensor to interrupt when the object is gone
+        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noMoreObject, RISING );
       }
-      else if(glDirection == TURN_LEFT)
+      else if( glDirection == TURN_LEFT )
       {
+        // if object detected right, no need to leave left sensor on until we complete turning
         killLeftSensor();
-        detachInterrupt(digitalPinToInterrupt(rightProximitySensor));
-        attachInterrupt(digitalPinToInterrupt(rightroximitySensor), noMoreObject, RISING);
+        // we now need sensor to interrupt when the object is gone
+        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noMoreObject, RISING );
       }
       
-      while(glState == eTurn)
+      while( glState == eTurn )
       {
-        //stay here as long as the object is still detected
-        //TODO: if been here for too long change to fullturn
+        // stay here as long as the object is still detected
+        if( FULL_TURN_TIME < (timePassed - millis() ) )
+        {
+          // or too long to be turning with just on motor
+          glState = eTurnFull;
+        }
       }
       break;
     }
     
     case eTurnFull:
     {
+      unsigned long timePassed = millis();
 
+      // do the step task
+      turnFull( glDirection );
+
+      // stay here untill there is a new noObject interrupt
+      while( glState == eTurnFull )
+      {
+        // or we figured there must be an error
+        if( ERROR_TIME < (timePassed - millis() ) )
+        {
+          glState = eError;
+        }
+      }
       break;
     }
 
     case eError:
     {
       inError();
-      //no often, only try this step in case of error
-      //all logic is inside the step function.
-      //start over from idle for we don't know where we are
+      // no often, only try this step in case of error
+      // all logic is inside the step function.
+      // then start over from idle for we don't know where we are
       glState = eIdle;
       break;
     }
@@ -257,3 +286,36 @@ void turn( bool Way )
   }
 }
 
+void turnFull( bool Way )
+{
+  if( Way )
+  {
+    turnFullRight();
+  }
+  else
+  {
+    turnFullLeft();
+  }
+}
+
+void enableSensors( void )
+{
+  digitalWrite( leftSensor, HIGH );
+  digitalWrite( rightSensor, HIGH );
+}
+
+void killRightSensor( void )
+{
+  digitalWrite( rightSensor, LOW );
+}
+
+void killLeftSensor( void )
+{
+  digitalWrite( leftSensor, LOW );
+}
+
+void detachInterrupts( void )
+{
+  detachInterrupt( digitalPinToInterrupt( rightProximitySensor ) );
+  detachInterrupt( digitalPinToInterrupt( leftProximitySensor ) );
+}

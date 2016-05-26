@@ -25,10 +25,9 @@ const byte rightSensor   = 6;
 const byte NORMAL_SPEED         = 100;
 const byte LOW_SPEED            = 75;
 const byte HIGH_SPEED           = 125;
-const int NO_OBJECT         = 600;
-const int OBJECT_TOO_CLOSE  = 400;
-const int SENSING_INTERVALS = 2000;   //reading sensors every 2 seconds
 const int STEPS_DELAY       = 3000;
+const int FULL_TURN_TIME	= 2000;		//2 seconds to pass from turning to 2 motors turnning
+const int ERROR_TIME		= 10000;	// 10 seconds to determin we are stuck
 
 //----------------------------------------------------------------------------
 //                            ENUMS
@@ -39,7 +38,7 @@ enum States
   eMoveForward,
   eMoveBackwards,
   eTurn,
-  eFullTurn,
+  eTurnFull,
   eError
 };
 
@@ -48,7 +47,7 @@ enum Directions
   TURN_LEFT = 0,
   TURN_RIGHT,
   NEVERMIND
-}
+};
 
 #endif
 
