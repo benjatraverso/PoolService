@@ -1,9 +1,11 @@
 volatile int sensorTriggered = -1;
-int proximitySensor = 2;
+int proximitySensor = 3;
 
 void setup() {
   Serial.begin( 9600 );//inicio comunicación serie
   pinMode(proximitySensor, INPUT_PULLUP);
+  pinMode(5, OUTPUT);
+  digitalWrite(5,HIGH);
   attachInterrupt( digitalPinToInterrupt( proximitySensor ), objectClose, LOW );//pin2 es interrupción 0, acoplo ahí el sensor de cercanía con cambio de estado
 }
 

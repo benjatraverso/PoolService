@@ -20,14 +20,18 @@ const bool LEFT                 = 0;
 const byte leftProximitySensor  = 3;   //interrupt input 0 reads left sensor
 const byte rightProximitySensor = 2;   //interrupt input 1 reads right sensor
 const byte leftSensor    = 5;
-const byte rightSensor   = 6;
+const byte rightSensor   = 4;
 
 const byte NORMAL_SPEED         = 100;
 const byte LOW_SPEED            = 75;
 const byte HIGH_SPEED           = 125;
-const int STEPS_DELAY       = 3000;
-const int FULL_TURN_TIME	= 2000;		//2 seconds to pass from turning to 2 motors turnning
-const int ERROR_TIME		= 10000;	// 10 seconds to determin we are stuck
+const int SECONDS               = 1000;
+const int STEPS_DELAY           = 3 * SECONDS;
+const int FULL_TURN_TIME      	= 10 * SECONDS;		//10 seconds to pass from turning to 2 motors turnning
+const int ERROR_TIME		        = 60 * SECONDS;	// 60 seconds to determin we are stuck
+
+const byte DETECTED      = 0;
+const byte GONE          = 1;
 
 //----------------------------------------------------------------------------
 //                            ENUMS
