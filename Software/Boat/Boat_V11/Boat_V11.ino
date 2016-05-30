@@ -20,7 +20,7 @@ volatile int intLeft = -1;
 //----------------------------------------------------------------------------
 void setup()
 {
-  Serial.begin(9600);//for testing purposes
+  Serial.begin( 9600 );//for testing purposes
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
   
@@ -37,7 +37,7 @@ void setup()
   pinMode( MotorRB, OUTPUT );
 
   // start with everything dead
-  glState = eIdle; //start on error to test the most movements we can on launch
+  glState = eIdle;
 }
 
 //----------------------------------------------------------------------------
@@ -62,8 +62,8 @@ void loop( void )
       moveForward();
 
       // for moving forward we need to open our eyes
-      attachInterrupt( digitalPinToInterrupt(rightProximitySensor), rightObjectDetected, LOW );
-      attachInterrupt( digitalPinToInterrupt(leftProximitySensor), leftObjectDetected, LOW );
+      attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), rightObjectDetected, LOW );
+      attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), leftObjectDetected, LOW );
       enableSensors();
       delay(500);
 
@@ -263,33 +263,33 @@ void beIdle( void )
 void moveForward( void )
 {
   // always go to idle first to avoid enabling both pins of motor
-  setRight(FORWARD);
-  setLeft(FORWARD);
+  setRight( FORWARD );
+  setLeft( FORWARD );
 }
 
 void moveBackwards( void )
 {
   // always go to idle first to avoid enabling both pins of motor
-  setRight(BACKWARDS);
-  setLeft(BACKWARDS);
+  setRight( BACKWARDS );
+  setLeft( BACKWARDS );
 }
 
 void turnFullLeft( void )
 {
-  setRight(BACKWARDS);
-  setLeft(FORWARD);
+  setRight( BACKWARDS );
+  setLeft( FORWARD );
 }
 
 void turnFullRight( void )
 {
-  setRight(FORWARD);
-  setLeft(BACKWARDS);
+  setRight( FORWARD );
+  setLeft( BACKWARDS );
 }
 
 void turnRight( void )
 {
   killLeft();
-  setRight(FORWARD);
+  setRight( FORWARD );
 }
  
 void turnLeft( void )
