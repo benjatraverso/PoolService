@@ -69,15 +69,15 @@ void loop( void )
 
       intRight = -1;
       intLeft = -1;
-      while(glState == eMoveForward)
+      while( eMoveForward == glState )
       {
-        if(intRight == DETECTED)
+        if( DETECTED == intRight )
         {
           glState = eTurn;
           glDirection = TURN_RIGHT;
           Serial.println("right detected");
         }
-        if(intLeft == DETECTED)
+        if( DETECTED == intLeft )
         {
           glState = eTurn;
           glDirection = TURN_LEFT;
@@ -104,7 +104,7 @@ void loop( void )
       // if we are here an interrupt popedUp, check which way to turn
       //Serial.println(intRight);
       //Serial.println(intLeft);
-      if( intRight == DETECTED )
+      if( DETECTED == intRight )
       {
         Serial.println("right detected");
         // if object detected right, no need to leave left sensor on until we complete turning
@@ -112,7 +112,7 @@ void loop( void )
         // we now need sensor to interrupt when the object is gone
         attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObjectRight, RISING );
       }
-      else if( intLeft == DETECTED )
+      else if( DETECTED == intLeft )
       {
         Serial.println("left detected");
         // if object detected left, no need to leave right sensor on until we complete turning
@@ -121,16 +121,16 @@ void loop( void )
         attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObjectLeft, RISING );
       }
       
-      while( glState == eTurn )
+      while( eTurn == glState )
       {
         // stay here as long as the object is still detected
-        if( intRight == GONE || intLeft == GONE )
+        if( GONE == intRight || GONE == intLeft )
         {
-          Serial.println("Object gone");
+          Serial.println("object gone");
           glState = eMoveForward;
         }
         
-        if( FULL_TURN_TIME < ( timePassed - millis() ) )
+        if( FULL_TURN_TIME < ( millis() - timePassed ) )
         {
           // or too long to be turning with just on motor
           glState = eTurnFull;
@@ -148,21 +148,19 @@ void loop( void )
       turnFull( glDirection );
 
       // stay here untill there is a new noObject interrupt
-      while( glState == eTurnFull )
+      while( eTurnFull == glState )
       {
-        if( intRight == GONE || intLeft == GONE )
+        if( GONE == intRight || GONE == intLeft )
         {
           Serial.println("object gone");
           glState = eMoveForward;
         }
         
         // or we figured there must be an error
-        /*
-        if( ERROR_TIME < (timePassed - millis() ) )
+        if( ERROR_TIME < ( millis() - timePassed ) )
         {
           glState = eError;
         }
-        */
       }
       break;
     }
@@ -188,7 +186,7 @@ void loop( void )
 }
 
 //----------------------------------------------------------------------------
-//                            SENSORS
+//                            SENSORS - INTERRUPTS
 //----------------------------------------------------------------------------
 void rightObjectDetected( void )
 {
