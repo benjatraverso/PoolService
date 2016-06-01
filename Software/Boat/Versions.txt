@@ -1,2 +1,3 @@
-1.0: Versi髇 con sensores conectados a analogIn y lecturas de distancia.
-1.1: Versi髇 con sensores a digital por interrupciones.
+1.0: Versi贸n con sensores conectados a analogIn y lecturas de distancia.
+1.1: Versi贸n con sensores a digital por interrupciones.
+1.2: Versi贸n con sensores de detecci贸n de zonas de oscuridad
