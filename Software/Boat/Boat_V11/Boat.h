@@ -17,8 +17,8 @@ const bool BACKWARDS            = 0;
 const bool RIGHT                = 1;
 const bool LEFT                 = 0;
 
-const byte leftProximitySensor  = 3;   //interrupt input 0 reads left sensor
-const byte rightProximitySensor = 2;   //interrupt input 1 reads right sensor
+const byte leftProximitySensor  = 2;   //interrupt input 0 reads left sensor
+const byte rightProximitySensor = 3;   //interrupt input 1 reads right sensor
 const byte leftSensor    = 5;
 const byte rightSensor   = 4;
 
@@ -55,34 +55,35 @@ enum Directions
 
 #endif
 
-//                         +------------------+
-//                         |                  |
-//               RESET PC6 | 1             28 | ADC5
-//                         |                  | 
-//                  RX PD0 | 2             27 | ADC4
-//                         |                  | 
-//                  TX PD1 | 3             26 | ADC3
-//                         |                  | 
-//                INT0 PD2 | 4             25 | ADC2
-//                         |                  | 
-//          (PWM) INT1 PD3 | 5             24 | ADC1
-//                         |                  | 
-//                     PD4 | 6             23 | ADC0
-//                         |                  | 
-//                     VCC | 7             22 | GND
-//                         |                  | 
-//                     GND | 8             21 | AREF
-//                         |                  | 
-//                   XTAL1 | 9             20 | AVCC
-//                         |                  | 
-//                   XTAL2 | 10            19 | PD13
-//                         |                  | 
-//               (PWM) PD5 | 11            18 | PD12
-//                         |                  | 
-//               (PWM) PD6 | 12            17 | PD11 (PWM)
-//                         |                  | 
-//                     PD7 | 13            16 | PD10 (PWM)
-//                         |                  | 
-//                     PB0 | 14            15 | PD9 (PWM)
-//                         |                  |
-//                         +------------------+
+//                               +-----___-----+
+//                               |             |
+//                         RESET | 1        28 | AI5
+//                               |             |
+//                           RXD | 2        27 | AI4
+//                               |             |
+//                           TXD | 3        26 | AI3
+//                               |             |
+// leftProximitySensor  INT0 PD2 | 4        25 | AI2
+//                               |             |
+// rightProximitySensor INT1 PD3 | 5        24 | AI1
+//                               |             |
+// rightSensor               PD4 | 6        23 | AI0
+//                               |             |
+//                           VCC | 7        22 | GND
+//                               |             |
+//                           GND | 8        21 | AREF
+//                               |             |
+//                         XTAL1 | 9        20 | AVCC
+//                               |             |
+//                         XTAL2 | 10       19 | DP13         MotorRB
+//                               |             |
+// leftSensor          (PWM) DP5 | 11       18 | DP12         MotorRF
+//                               |             |
+// NotConnected        (PWM) DP6 | 12       17 | DP11 (PWM)   EnableLeft
+//                               |             |
+// MotorLB                   DP7 | 13       16 | DP10 (PWM)   EnableRight
+//                               |             |
+// MotorLF                   DP8 | 14       15 | DP9 (PWM)    NotConnected
+//                               |             |
+//                               +-------------+
+
