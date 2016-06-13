@@ -28,7 +28,7 @@ const byte HIGH_SPEED           = 125;
 const int SECONDS               = 1000;
 const int STEPS_DELAY           = 3 * SECONDS;
 const int FULL_TURN_TIME      	= 10 * SECONDS;		//10 seconds to pass from turning to 2 motors turnning
-const int ERROR_TIME		        = 60 * SECONDS;	// 60 seconds to determin we are stuck
+const int ERROR_TIME		        = 30 * SECONDS;	// 60 seconds to determin we are stuck
 
 const byte DETECTED      = 0;
 const byte GONE          = 1;
