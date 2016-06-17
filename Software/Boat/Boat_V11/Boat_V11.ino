@@ -71,17 +71,22 @@ void loop( void )
       intLeft = -1;
       while( eMoveForward == glState )
       {
-        if( DETECTED == intRight )
+        if( DETECTED == intRight || DETECTED == intLeft )
         {
+          // we need to change interrupt for the sensor that detected an object
+          // and we don't need the other one, so we detach both
+          detachInterrupts();
           glState = eTurn;
-          glDirection = TURN_RIGHT;
-          Serial.println("right detected");
-        }
-        if( DETECTED == intLeft )
-        {
-          glState = eTurn;
-          glDirection = TURN_LEFT;
-          Serial.println("left detected");
+          if( DETECTED == intRight )
+          {
+            glDirection = TURN_RIGHT;
+            Serial.println("right detected");
+          }
+          else
+          {
+            glDirection = TURN_LEFT;
+            Serial.println("left detected");
+          }
         }
         delay( STEPS_DELAY );
         //TODO: get outta here if've been for too long
@@ -93,32 +98,24 @@ void loop( void )
     case eTurn:
     {
       Serial.println("turning");
-      // we need to change interrupt for the sensor that detected an object
-      // and we don't need the other one, so we detach both
-      detachInterrupts();
       // record the much time we spend here...
       unsigned long timePassed = millis();
       // do the actual turn's task, turn
       turn(glDirection);
 
       // if we are here an interrupt popedUp, check which way to turn
-      //Serial.println(intRight);
-      //Serial.println(intLeft);
+      // and kill the sensor we should not worry about
       if( DETECTED == intRight )
       {
         Serial.println("right detected");
-        // if object detected right, no need to leave left sensor on until we complete turning
         killLeftSensor();
-        // we now need sensor to interrupt when the object is gone
-        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObjectRight, RISING );
+        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObject, RISING );
       }
       else if( DETECTED == intLeft )
       {
         Serial.println("left detected");
-        // if object detected left, no need to leave right sensor on until we complete turning
         killRightSensor();
-        // we now need sensor to interrupt when the object is gone
-        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObjectLeft, RISING );
+        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObject, RISING );
       }
       
       while( eTurn == glState )
@@ -126,7 +123,10 @@ void loop( void )
         // stay here as long as the object is still detected
         if( GONE == intRight || GONE == intLeft )
         {
+          intRight = -1;
+          intLeft = -1;
           Serial.println("object gone");
+          detachInterrupts();
           glState = eMoveForward;
         }
         
@@ -152,7 +152,10 @@ void loop( void )
       {
         if( GONE == intRight || GONE == intLeft )
         {
+          intRight = -1;
+          intLeft = -1;
           Serial.println("object gone");
+          detachInterrupts();
           glState = eMoveForward;
         }
         
@@ -198,13 +201,9 @@ void leftObjectDetected( void )
   intLeft = DETECTED;
 }
 
-void noObjectRight( void )
+void noObject( void )
 {
   intRight = GONE;
-}
-
-void noObjectLeft( void )
-{
   intLeft = GONE;
 }
 
