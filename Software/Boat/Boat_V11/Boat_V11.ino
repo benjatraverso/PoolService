@@ -10,17 +10,17 @@
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
 byte glState;
-byte glDirection = NEVERMIND;
-int glSpeed = NORMAL_SPEED;
+byte glDirection;
+int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
 
-volatile int intRight = -1;
-volatile int intLeft = -1;
+volatile int intRight = IDLE;
+volatile int intLeft = IDLE;
 //----------------------------------------------------------------------------
 //                            SETUP
 //----------------------------------------------------------------------------
 void setup()
 {
-  Serial.begin( 9600 );//for testing purposes
+  Serial.begin( 9600 );//for testing purposes TODO: remove serial comm for release version
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
   
@@ -65,10 +65,13 @@ void loop( void )
       attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), rightObjectDetected, LOW );
       attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), leftObjectDetected, LOW );
       enableSensors();
-      delay(500);
-
-      intRight = -1;
-      intLeft = -1;
+            
+      // we have no direction, we are moving forward, so we should clean it.
+      glDirection = NEVERMIND;
+      
+      //just so we can ignore any initial reading from sensors
+      startDetecting();
+      
       while( eMoveForward == glState )
       {
         if( DETECTED == intRight || DETECTED == intLeft )
@@ -88,7 +91,6 @@ void loop( void )
             Serial.println("left detected");
           }
         }
-        delay( STEPS_DELAY );
         //TODO: get outta here if've been for too long
         //also do other stuff while moving forward (future)
       }
@@ -101,30 +103,29 @@ void loop( void )
       // record the much time we spend here...
       unsigned long timePassed = millis();
       // do the actual turn's task, turn
-      turn(glDirection);
+      turn( glDirection );
 
       // if we are here an interrupt popedUp, check which way to turn
       // and kill the sensor we should not worry about
-      if( DETECTED == intRight )
+      if( glDirection )
       {
         Serial.println("right detected");
         killLeftSensor();
-        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObject, RISING );
+        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObjectRight, RISING );
       }
-      else if( DETECTED == intLeft )
+      else
       {
         Serial.println("left detected");
         killRightSensor();
-        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObject, RISING );
+        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObjectLeft, RISING );
       }
       
+      startDetecting();
       while( eTurn == glState )
       {
         // stay here as long as the object is still detected
         if( GONE == intRight || GONE == intLeft )
         {
-          intRight = -1;
-          intLeft = -1;
           Serial.println("object gone");
           detachInterrupts();
           glState = eMoveForward;
@@ -152,8 +153,6 @@ void loop( void )
       {
         if( GONE == intRight || GONE == intLeft )
         {
-          intRight = -1;
-          intLeft = -1;
           Serial.println("object gone");
           detachInterrupts();
           glState = eMoveForward;
@@ -162,6 +161,7 @@ void loop( void )
         // or we figured there must be an error
         if( ERROR_TIME < ( millis() - timePassed ) )
         {
+          detachInterrupts();
           glState = eError;
         }
       }
@@ -182,6 +182,7 @@ void loop( void )
     default:
     {
       //we should never be here, but..., just in case
+      detachInterrupts(); //for we don't know were we came here from
       glState = eIdle;
     }
   }
@@ -191,6 +192,12 @@ void loop( void )
 //----------------------------------------------------------------------------
 //                            SENSORS - INTERRUPTS
 //----------------------------------------------------------------------------
+void startDetecting( void )
+{
+  delay(500);
+  intRight = IDLE; intLeft = IDLE;
+}
+
 void rightObjectDetected( void )
 {
   intRight = DETECTED;
@@ -201,9 +208,13 @@ void leftObjectDetected( void )
   intLeft = DETECTED;
 }
 
-void noObject( void )
+void noObjectRight( void )
 {
   intRight = GONE;
+}
+
+void noObjectLeft( void )
+{
   intLeft = GONE;
 }
 
@@ -241,12 +252,17 @@ void inError( void )
   //be idle and move back
   moveBackwards();
   //keep pushing back for a while
-  delay( STEPS_DELAY );
+  delay( ERROR_DELAY );
   //shake a little
   turnFullLeft();
-  delay( STEPS_DELAY );
+  delay( ERROR_DELAY );
   turnFullRight();
-  delay( STEPS_DELAY );
+  delay( ERROR_DELAY );
+  turnFullLeft();
+  delay( ERROR_DELAY );
+  turnFullRight();
+  delay( ERROR_DELAY );
+  moveBackwards();
   //end, this will put me on idle later, let's hope the mad dance made it
   //get stuff back to normal
   glSpeed = NORMAL_SPEED;

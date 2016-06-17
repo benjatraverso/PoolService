@@ -27,11 +27,9 @@ const byte LOW_SPEED            = 75;
 const byte HIGH_SPEED           = 125;
 const int SECONDS               = 1000;
 const int STEPS_DELAY           = 3 * SECONDS;
-const int FULL_TURN_TIME      	= 10 * SECONDS;		//10 seconds to pass from turning to 2 motors turnning
-const int ERROR_TIME		        = 30 * SECONDS;	// 60 seconds to determin we are stuck
-
-const byte DETECTED      = 0;
-const byte GONE          = 1;
+const int FULL_TURN_TIME      	= 10 * SECONDS;		// 10 seconds to pass from turning to 2 motors turnning
+const int ERROR_TIME		        = 30 * SECONDS;   // seconds to determin we are stuck
+const int ERROR_DELAY           = 10 * SECONDS;
 
 //----------------------------------------------------------------------------
 //                            ENUMS
@@ -51,6 +49,13 @@ enum Directions
   TURN_LEFT = 0,
   TURN_RIGHT,
   NEVERMIND
+};
+
+enum Sensors
+{
+  DETECTED,
+  GONE,
+  IDLE
 };
 
 #endif
@@ -79,11 +84,10 @@ enum Directions
 //                               |             |
 // leftSensor          (PWM) DP5 | 11       18 | DP12         MotorRF
 //                               |             |
-// NotConnected        (PWM) DP6 | 12       17 | DP11 (PWM)   EnableLeft
+//                     (PWM) DP6 | 12       17 | DP11 (PWM)   EnableLeft
 //                               |             |
 // MotorLB                   DP7 | 13       16 | DP10 (PWM)   EnableRight
 //                               |             |
-// MotorLF                   DP8 | 14       15 | DP9 (PWM)    NotConnected
+// MotorLF                   DP8 | 14       15 | DP9 (PWM)
 //                               |             |
 //                               +-------------+
-
