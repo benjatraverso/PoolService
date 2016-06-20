@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
-// Versión 1.1
-// Sensores con interrupciones
+// Versión 1.1.2
+// Interrupt throw sensors but only modifiyng glDirection in each
 //
 //----------------------------------------------------------------------------
 
@@ -10,11 +10,10 @@
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
 byte glState;
-byte glDirection;
+volatile byte glDirection = NEITHER;
 int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
-
-volatile int intRight = -1;
-volatile int intLeft = -1;
+volatile byte lint = HIGH;
+volatile byte rint = HIGH;
 //----------------------------------------------------------------------------
 //                            SETUP
 //----------------------------------------------------------------------------
@@ -27,8 +26,8 @@ void setup()
   pinMode( leftSensor, OUTPUT );
   pinMode( rightSensor, OUTPUT );
 
-  pinMode(rightProximitySensor, INPUT_PULLUP);
-  pinMode(leftProximitySensor, INPUT_PULLUP);
+  pinMode( rightProximitySensor, INPUT );
+  pinMode( leftProximitySensor, INPUT );
 
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
@@ -38,6 +37,11 @@ void setup()
 
   // start with everything dead
   glState = eIdle;
+
+  attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), rightSensorAlert, CHANGE );
+  attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), leftSensorAlert, CHANGE );
+  //attachInterrupt( rightProximitySensor, rightSensorAlert, CHANGE );
+  //attachInterrupt( leftProximitySensor, leftSensorAlert, CHANGE );
 }
 
 //----------------------------------------------------------------------------
@@ -62,32 +66,17 @@ void loop( void )
       moveForward();
 
       // for moving forward we need to open our eyes
-      attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), rightObjectDetected, LOW );
-      attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), leftObjectDetected, LOW );
       enableSensors();
+      delay(500);
 
-      // we have no direction, we are moving forward, so we should clean it.
-      glDirection = NEVERMIND;
-      
-      //just so we can ignore any initial reading from sensors
-      startDetecting();
-      
-      while( eMoveForward == glState )
+      glDirection = NEITHER;
+      while( NEITHER == glDirection )
       {
-        // we need to change interrupt for the sensor that detected an object
-        // and we don't need the other one, so we detach both
-        if( DETECTED == intRight )
+        Serial.println(rint);
+        Serial.println(lint);
+        if( rint == LOW || lint == LOW )
         {
-          detachInterrupts();
-          glDirection = TURN_RIGHT;
-          Serial.println("right detected");
-          glState = eTurn;
-        }
-        if( DETECTED == intLeft )
-        {
-          detachInterrupts();
-          glDirection = TURN_LEFT;
-          Serial.println("left detected");
+          Serial.println("object detected");
           glState = eTurn;
         }
         //TODO: get outta here if've been for too long
@@ -98,35 +87,39 @@ void loop( void )
 
     case eTurn:
     {
-      Serial.println("turning");
+      Serial.print("turning ");
       // record the much time we spend here...
       unsigned long timePassed = millis();
-      // do the actual turn's task, turn
-      turn( glDirection );
-
+      
       // if we are here an interrupt popedUp, check which way to turn
-      // and kill the sensor we should not worry about
-      if( glDirection )
+      Serial.println( glDirection );
+      Serial.println(rint);
+      Serial.println(lint);
+      if( rint == LOW )
       {
-        Serial.println("right detected");
-        killLeftSensor();
-        attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), noObjectRight, RISING );
+        Serial.println("left");
+        //killLeftSensor();
+        // do the actual turn's task, turn
+        turnLeft();
+      }
+      else if( lint == LOW )
+      {
+        Serial.println("right");
+        //killRightSensor();
+        // do the actual turn's task, turn
+        turnRight();
       }
       else
       {
-        Serial.println("left detected");
-        killRightSensor();
-        attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), noObjectLeft, RISING );
+        glState = eMoveForward;
       }
       
-      startDetecting();
       while( eTurn == glState )
       {
         // stay here as long as the object is still detected
-        if( GONE == intRight || GONE == intLeft )
+        if( rint && lint )
         {
           Serial.println("object gone");
-          detachInterrupts();
           glState = eMoveForward;
         }
         
@@ -145,22 +138,27 @@ void loop( void )
       unsigned long timePassed = millis();
 
       // do the step task
-      turnFull( glDirection );
+      if( NEITHER == glDirection )
+      {
+        glState = eMoveForward;
+      }
+      else
+      {
+        turnFull( glDirection );
+      }
 
       // stay here untill there is a new noObject interrupt
       while( eTurnFull == glState )
       {
-        if( GONE == intRight || GONE == intLeft )
+        if( NEITHER == glDirection )
         {
           Serial.println("object gone");
-          detachInterrupts();
           glState = eMoveForward;
         }
         
         // or we figured there must be an error
         if( ERROR_TIME < ( millis() - timePassed ) )
         {
-          detachInterrupts();
           glState = eError;
         }
       }
@@ -181,7 +179,6 @@ void loop( void )
     default:
     {
       //we should never be here, but..., just in case
-      detachInterrupts(); //for we don't know were we came here from
       glState = eIdle;
     }
   }
@@ -191,34 +188,14 @@ void loop( void )
 //----------------------------------------------------------------------------
 //                            SENSORS - INTERRUPTS
 //----------------------------------------------------------------------------
-void startDetecting( void )
+void rightSensorAlert( void )
 {
-  delay(500);
-  intRight = -1; intLeft = -1;
+  rint = digitalRead( rightProximitySensor );
 }
 
-void rightObjectDetected( void )
+void leftSensorAlert( void )
 {
-  intRight = DETECTED;
-  //intLeft = -1;
-}
-
-void leftObjectDetected( void )
-{
-  intLeft = DETECTED;
-  //intRight = -1;
-}
-
-void noObjectRight( void )
-{
-  intRight = GONE;
-  //intLeft = -1;
-}
-
-void noObjectLeft( void )
-{
-  intLeft = GONE;
-  //intRight = -1;
+  lint = digitalRead( leftProximitySensor );
 }
 
 void enableSensors( void )

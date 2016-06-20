@@ -17,8 +17,8 @@ const bool BACKWARDS            = 0;
 const bool RIGHT                = 1;
 const bool LEFT                 = 0;
 
-const byte leftProximitySensor  = 2;   //interrupt input 0 reads left sensor
-const byte rightProximitySensor = 3;   //interrupt input 1 reads right sensor
+const byte leftProximitySensor  = 2;   //interrupt input 0 reads left sensor (DP2 is interrupt 0)
+const byte rightProximitySensor = 3;   //interrupt input 1 reads right sensor (DP3 is interrupt 1)
 const byte leftSensor    = 5;
 const byte rightSensor   = 4;
 
@@ -31,6 +31,10 @@ const int FULL_TURN_TIME      	= 10 * SECONDS;		// 10 seconds to pass from turni
 const int ERROR_TIME		        = 30 * SECONDS;   // seconds to determin we are stuck
 const int ERROR_DELAY           = 10 * SECONDS;
 
+const int NEITHER     = -1;
+const int TURN_LEFT   = 0;
+const int TURN_RIGHT  = 1;
+
 //----------------------------------------------------------------------------
 //                            ENUMS
 //----------------------------------------------------------------------------
@@ -42,19 +46,6 @@ enum States
   eTurn,
   eTurnFull,
   eError
-};
-
-enum Directions
-{
-  TURN_LEFT = 0,
-  TURN_RIGHT,
-  NEVERMIND
-};
-
-enum Sensors
-{
-  DETECTED,
-  GONE
 };
 
 #endif
