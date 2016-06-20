@@ -67,21 +67,17 @@ void loop( void )
 
       // for moving forward we need to open our eyes
       enableSensors();
-      delay(500);
+      delay( 500 );
 
-      glDirection = NEITHER;
-      while( NEITHER == glDirection )
+      rint = HIGH;
+      lint = HIGH;
+      while( rint && lint )
       {
-        Serial.println(rint);
-        Serial.println(lint);
-        if( rint == LOW || lint == LOW )
-        {
-          Serial.println("object detected");
-          glState = eTurn;
-        }
         //TODO: get outta here if've been for too long
         //also do other stuff while moving forward (future)
       }
+      Serial.println("object detected");
+      glState = eTurn;
       break;
     }
 
@@ -91,8 +87,6 @@ void loop( void )
       // record the much time we spend here...
       unsigned long timePassed = millis();
       
-      // if we are here an interrupt popedUp, check which way to turn
-      Serial.println( glDirection );
       Serial.println(rint);
       Serial.println(lint);
       if( rint == LOW )
@@ -100,34 +94,35 @@ void loop( void )
         Serial.println("left");
         //killLeftSensor();
         // do the actual turn's task, turn
-        turnLeft();
       }
       else if( lint == LOW )
       {
         Serial.println("right");
         //killRightSensor();
         // do the actual turn's task, turn
-        turnRight();
       }
       else
       {
         glState = eMoveForward;
       }
       
-      while( eTurn == glState )
+      while( !rint || !lint )
       {
         // stay here as long as the object is still detected
-        if( rint && lint )
-        {
-          Serial.println("object gone");
-          glState = eMoveForward;
-        }
         
         if( FULL_TURN_TIME < ( millis() - timePassed ) )
         {
           // or too long to be turning with just on motor
           glState = eTurnFull;
+          break;//get out of this loop
         }
+      }
+    
+      //if both not detected, go to forward
+      if( rint && lint )
+      {
+        Serial.println("object gone");
+        glState = eMoveForward;
       }
       break;
     }
@@ -138,30 +133,32 @@ void loop( void )
       unsigned long timePassed = millis();
 
       // do the step task
-      if( NEITHER == glDirection )
+      if( lint || rint )
       {
         glState = eMoveForward;
       }
       else
       {
-        turnFull( glDirection );
+        turnFull( lint );//if left is LOW it should turn to left, which is 0, if it right then left will be 1, which is the state of lint  
       }
 
       // stay here untill there is a new noObject interrupt
-      while( eTurnFull == glState )
+      while( !rint && !lint )
       {
-        if( NEITHER == glDirection )
-        {
-          Serial.println("object gone");
-          glState = eMoveForward;
-        }
-        
         // or we figured there must be an error
         if( ERROR_TIME < ( millis() - timePassed ) )
         {
           glState = eError;
         }
       }
+      
+      if( rint && lint )
+      {
+        Serial.println("object gone");
+        glState = eMoveForward;
+        break;
+      }
+
       break;
     }
 
@@ -191,11 +188,29 @@ void loop( void )
 void rightSensorAlert( void )
 {
   rint = digitalRead( rightProximitySensor );
+  if( rint )
+  {
+    moveForward();
+  }
+  else
+  {
+    turnLeft();
+  }
+  lint = !rint;
 }
 
 void leftSensorAlert( void )
 {
   lint = digitalRead( leftProximitySensor );
+  if( lint )
+  {
+    moveForward();
+  }
+  else
+  {
+    turnRight();
+  }
+  lint = !rint;
 }
 
 void enableSensors( void )
