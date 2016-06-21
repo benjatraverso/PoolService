@@ -37,7 +37,7 @@ void setup()
 //----------------------------------------------------------------------------
 void loop( void )
 {
-  digitalWrite(rightSensor, HIGH);
+  enableSensors();
   moveForward();
   while( 1 )
   {
@@ -50,6 +50,7 @@ void loop( void )
 //----------------------------------------------------------------------------
 void rightSensorAlert( void )
 {
+  beIdle();
   if( digitalRead( rightProximitySensor ) )
   {
     moveForward();
@@ -62,6 +63,7 @@ void rightSensorAlert( void )
 
 void leftSensorAlert( void )
 {
+  beIdle();
   if( digitalRead( leftProximitySensor ) )
   {
     moveForward();
