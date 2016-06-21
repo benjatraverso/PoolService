@@ -32,7 +32,7 @@ const int ERROR_TIME		        = 30 * SECONDS;   // seconds to determin we are st
 const int ERROR_DELAY           = 10 * SECONDS;
 const int POOLING_DELAY         = 1 * SECONDS;
 
-const int NEITHER     = -1;
+const int NEITHER     = 2;
 const int TURN_LEFT   = 0;
 const int TURN_RIGHT  = 1;
 

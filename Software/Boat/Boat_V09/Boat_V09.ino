@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
-// Versión 1.1.2
-// Interrupt throw sensors with pooling
+// Versión 09.1
+// Interrupt through sensors with pooling
 //
 //----------------------------------------------------------------------------
 
@@ -9,7 +9,7 @@
 //----------------------------------------------------------------------------
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
-byte glState; // TODO: guess there is no need for this to be global
+byte glState;
 byte glDirection = NEITHER;
 int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
 //----------------------------------------------------------------------------
@@ -56,26 +56,25 @@ void loop( void )
 
     case eMoveForward:
     {
-      Serial.print("moving forward ");
+      Serial.println("moving forward ");
       moveForward();
 
       // for moving forward we need to open our eyes
       enableSensors();
       delay( 500 );
-      
-      glDirection = NEITHER;
 
+      glDirection = NEITHER;
+      Serial.println(glDirection);
       while( NEITHER == glDirection )
       {
+        Serial.println(digitalRead( leftProximitySensor ));
         if( !digitalRead( leftProximitySensor ) )
         {
-          Serial.println("right");
           glDirection = TURN_RIGHT;
         }
         
         if( !digitalRead( rightProximitySensor ) )
         {
-          Serial.println("left");
           glDirection = TURN_LEFT;
         }
         //TODO: get outta here if've been for too long
@@ -121,6 +120,7 @@ void loop( void )
         // only read the sensor we care about
         // if that input is now high, go to forward
         if( 
+            //if glDirection is different, the digitalRead is not performed on that case
             ( glDirection == TURN_LEFT && digitalRead( rightProximitySensor ) ) ||
             ( glDirection == TURN_RIGHT && digitalRead( leftProximitySensor ) )
           )
@@ -197,34 +197,6 @@ void loop( void )
 //----------------------------------------------------------------------------
 //                            SENSORS - INTERRUPTS
 //----------------------------------------------------------------------------
-void rightSensorAlert( void )
-{
-  rint = digitalRead( rightProximitySensor );
-  if( rint )
-  {
-    moveForward();
-  }
-  else
-  {
-    turnLeft();
-  }
-  lint = !rint;
-}
-
-void leftSensorAlert( void )
-{
-  lint = digitalRead( leftProximitySensor );
-  if( lint )
-  {
-    moveForward();
-  }
-  else
-  {
-    turnRight();
-  }
-  lint = !rint;
-}
-
 void enableSensors( void )
 {
   digitalWrite( leftSensor, HIGH );
