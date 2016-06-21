@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
 // Versión 1.1.2
-// Interrupt throw sensors but only modifiyng glDirection in each
+// Interrupts that interrupt!
 //
 //----------------------------------------------------------------------------
 
@@ -10,10 +10,8 @@
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
 byte glState;
-volatile byte glDirection = NEITHER;
 int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
-volatile byte lint = HIGH;
-volatile byte rint = HIGH;
+
 //----------------------------------------------------------------------------
 //                            SETUP
 //----------------------------------------------------------------------------
@@ -26,8 +24,8 @@ void setup()
   pinMode( leftSensor, OUTPUT );
   pinMode( rightSensor, OUTPUT );
 
-  pinMode( rightProximitySensor, INPUT );
-  pinMode( leftProximitySensor, INPUT );
+  pinMode( rightProximitySensor, INPUT_PULLUP );
+  pinMode( leftProximitySensor, INPUT_PULLUP );
 
   //set al motor connected pins as output
   pinMode( MotorLF, OUTPUT );
@@ -35,13 +33,8 @@ void setup()
   pinMode( MotorRF, OUTPUT );
   pinMode( MotorRB, OUTPUT );
 
-  // start with everything dead
-  glState = eIdle;
-
   attachInterrupt( digitalPinToInterrupt( rightProximitySensor ), rightSensorAlert, CHANGE );
-  attachInterrupt( digitalPinToInterrupt( leftProximitySensor ), leftSensorAlert, CHANGE );
-  //attachInterrupt( rightProximitySensor, rightSensorAlert, CHANGE );
-  //attachInterrupt( leftProximitySensor, leftSensorAlert, CHANGE );
+  attachInterrupt( digitalPinToInterrupt( leftProximitySensor ) , leftSensorAlert , CHANGE );
 }
 
 //----------------------------------------------------------------------------
@@ -49,137 +42,18 @@ void setup()
 //----------------------------------------------------------------------------
 void loop( void )
 {
-  Serial.println("Estate: ");
-  switch ( glState )
+  enableSensors();
+  int timelapsed = millis();
+  moveForward( NORMAL_SPEED );
+  while( 1 )
   {
-    case eIdle:
-    {
-      Serial.println("idle");
-      beIdle();
-      glState = eMoveForward;
-      break;
-    }
-
-    case eMoveForward:
-    {
-      Serial.println("moving forward");
-      moveForward();
-
-      // for moving forward we need to open our eyes
-      enableSensors();
-      delay( 500 );
-
-      rint = HIGH;
-      lint = HIGH;
-      while( rint && lint )
-      {
-        //TODO: get outta here if've been for too long
-        //also do other stuff while moving forward (future)
-      }
-      Serial.println("object detected");
-      glState = eTurn;
-      break;
-    }
-
-    case eTurn:
-    {
-      Serial.print("turning ");
-      // record the much time we spend here...
-      unsigned long timePassed = millis();
-      
-      Serial.println(rint);
-      Serial.println(lint);
-      if( rint == LOW )
-      {
-        Serial.println("left");
-        //killLeftSensor();
-        // do the actual turn's task, turn
-      }
-      else if( lint == LOW )
-      {
-        Serial.println("right");
-        //killRightSensor();
-        // do the actual turn's task, turn
-      }
-      else
-      {
-        glState = eMoveForward;
-      }
-      
-      while( !rint || !lint )
-      {
-        // stay here as long as the object is still detected
-        
-        if( FULL_TURN_TIME < ( millis() - timePassed ) )
-        {
-          // or too long to be turning with just on motor
-          glState = eTurnFull;
-          break;//get out of this loop
-        }
-      }
-    
-      //if both not detected, go to forward
-      if( rint && lint )
-      {
-        Serial.println("object gone");
-        glState = eMoveForward;
-      }
-      break;
-    }
-    
-    case eTurnFull:
-    {
-      Serial.println("turning full");
-      unsigned long timePassed = millis();
-
-      // do the step task
-      if( lint || rint )
-      {
-        glState = eMoveForward;
-      }
-      else
-      {
-        turnFull( lint );//if left is LOW it should turn to left, which is 0, if it right then left will be 1, which is the state of lint  
-      }
-
-      // stay here untill there is a new noObject interrupt
-      while( !rint && !lint )
-      {
-        // or we figured there must be an error
-        if( ERROR_TIME < ( millis() - timePassed ) )
-        {
-          glState = eError;
-        }
-      }
-      
-      if( rint && lint )
-      {
-        Serial.println("object gone");
-        glState = eMoveForward;
-        break;
-      }
-
-      break;
-    }
-
-    case eError:
+    //no pool should take longer than 5 min
+    if( 5 * 60 * SECONDS > ( millis() - timelapsed ) )
     {
       inError();
-      Serial.println("running error state");
-      // no often, only try this step in case of error
-      // all logic is inside the step function.
-      // then start over from idle for we don't know where we are
-      glState = eIdle;
-      break;
     }
-
-    default:
-    {
-      //we should never be here, but..., just in case
-      glState = eIdle;
-    }
+    //place stuff to do while moving forward
   }
-  delay( STEPS_DELAY );
 }
 
 //----------------------------------------------------------------------------
@@ -187,30 +61,26 @@ void loop( void )
 //----------------------------------------------------------------------------
 void rightSensorAlert( void )
 {
-  rint = digitalRead( rightProximitySensor );
-  if( rint )
+  if( digitalRead( rightProximitySensor ) )
   {
-    moveForward();
+    moveForward( NORMAL_SPEED );
   }
   else
   {
-    turnLeft();
+    turnFullLeft( NORMAL_SPEED );
   }
-  lint = !rint;
 }
 
 void leftSensorAlert( void )
 {
-  lint = digitalRead( leftProximitySensor );
-  if( lint )
+  if( digitalRead( leftProximitySensor ) )
   {
-    moveForward();
+    moveForward( NORMAL_SPEED );
   }
   else
   {
-    turnRight();
+    turnFullRight( NORMAL_SPEED );
   }
-  lint = !rint;
 }
 
 void enableSensors( void )
@@ -221,20 +91,12 @@ void enableSensors( void )
 
 void killRightSensor( void )
 {
-  Serial.println("kill right");
   digitalWrite( rightSensor, LOW );
 }
 
 void killLeftSensor( void )
 {
-  Serial.println("kill left");
   digitalWrite( leftSensor, LOW );
-}
-
-void detachInterrupts( void )
-{
-  detachInterrupt( digitalPinToInterrupt( rightProximitySensor ) );
-  detachInterrupt( digitalPinToInterrupt( leftProximitySensor ) );
 }
 
 //----------------------------------------------------------------------------
@@ -245,19 +107,19 @@ void inError( void )
   //full speed for all this attempts
   glSpeed = HIGH_SPEED;
   //be idle and move back
-  moveBackwards();
+  moveBackwards( glSpeed );
   //keep pushing back for a while
   delay( ERROR_DELAY );
   //shake a little
-  turnFullLeft();
+  turnFullLeft( glSpeed );
   delay( ERROR_DELAY );
-  turnFullRight();
+  turnFullRight( glSpeed );
   delay( ERROR_DELAY );
-  turnFullLeft();
+  turnFullLeft( glSpeed );
   delay( ERROR_DELAY );
-  turnFullRight();
+  turnFullRight( glSpeed );
   delay( ERROR_DELAY );
-  moveBackwards();
+  moveBackwards( glSpeed );
   //end, this will put me on idle later, let's hope the mad dance made it
   //get stuff back to normal
   glSpeed = NORMAL_SPEED;
@@ -270,58 +132,39 @@ void beIdle( void )
   killLeft();
 }
 
-void moveForward( void )
+void moveForward( int sp )
 {
   // always go to idle first to avoid enabling both pins of motor
-  setRight( FORWARD );
-  setLeft( FORWARD );
+  setRight( FORWARD, sp );
+  setLeft( FORWARD, sp );
 }
 
-void moveBackwards( void )
+void turnFullLeft( int sp )
 {
-  // always go to idle first to avoid enabling both pins of motor
-  setRight( BACKWARDS );
-  setLeft( BACKWARDS );
+  setLeft( BACKWARDS, sp );
+  setRight( FORWARD, sp );
 }
 
-void turnFullLeft( void )
+void turnFullRight( int sp )
 {
-  setRight( BACKWARDS );
-  setLeft( FORWARD );
+  setLeft( FORWARD, sp );
+  setRight( BACKWARDS, sp );
 }
 
-void turnFullRight( void )
-{
-  setRight( FORWARD );
-  setLeft( BACKWARDS );
-}
-
-void turnRight( void )
-{
-  killLeft();
-  setRight( FORWARD );
-}
- 
-void turnLeft( void )
-{
-  killRight();
-  setLeft( FORWARD );
-}
-
-void setRight( bool Direction )
+void setRight( bool Direction, int sp )
 {
   killRight();
   digitalWrite( MotorRF, Direction );
   digitalWrite( MotorRB, !Direction );
-  analogWrite( EnableRight, glSpeed );
+  analogWrite( EnableRight, sp );
 }
 
-void setLeft( bool Direction )
+void setLeft( bool Direction, int sp )
 {
   killLeft();
   digitalWrite( MotorLF, Direction );
   digitalWrite( MotorLB, !Direction );
-  analogWrite( EnableLeft, glSpeed );
+  analogWrite( EnableLeft, sp );
 }
 
 void killRight( void )
@@ -338,38 +181,9 @@ void killLeft( void )
   digitalWrite( EnableLeft, LOW );
 }
 
-void move( bool Direction )
+void moveBackwards( int sp )
 {
-  if( Direction )
-  {
-    moveForward();
-  }
-  else
-  {
-    moveBackwards();
-  }
+  setRight( BACKWARDS, sp );
+  setLeft( BACKWARDS, sp ); 
 }
 
-void turn( bool Way )
-{
-  if( Way )
-  {
-    turnRight();
-  }
-  else
-  {
-    turnLeft();
-  }
-}
-
-void turnFull( bool Way )
-{
-  if( Way )
-  {
-    turnFullRight();
-  }
-  else
-  {
-    turnFullLeft();
-  }
-}
