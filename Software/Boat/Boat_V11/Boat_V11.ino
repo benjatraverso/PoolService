@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
 // Versión 1.1
-// Sensores con interrupciones
+// sensors throught interrupts that raise flags
 //
 //----------------------------------------------------------------------------
 
@@ -10,7 +10,7 @@
 //                            GLOBAL VARIABLES
 //----------------------------------------------------------------------------
 byte glState;
-byte glDirection;
+int glDirection;
 int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
 
 volatile int intRight = -1;
