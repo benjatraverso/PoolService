@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------------
 //
 // Versión 09.1
-// Reading sensors with pooling
+// Interrupt through sensors with pooling
 //
 //----------------------------------------------------------------------------
 
@@ -17,6 +17,7 @@ int glSpeed = NORMAL_SPEED;// TODO: change to HIGH_SPEED for solar version
 //----------------------------------------------------------------------------
 void setup()
 {
+  Serial.begin( 9600 );//for testing purposes TODO: remove serial comm for release version
   pinMode( EnableLeft, OUTPUT ); //set enable motor pin as output
   pinMode( EnableRight, OUTPUT );//same for right one
   
@@ -41,10 +42,12 @@ void setup()
 //----------------------------------------------------------------------------
 void loop( void )
 {
+  Serial.println("Estate: ");
   switch ( glState )
   {
     case eIdle:
     {
+      Serial.println("idle");
       beIdle();
       glDirection = NEITHER;
       glState = eMoveForward;
@@ -53,6 +56,7 @@ void loop( void )
 
     case eMoveForward:
     {
+      Serial.println("moving forward ");
       moveForward();
 
       // for moving forward we need to open our eyes
@@ -60,6 +64,7 @@ void loop( void )
       delay( 500 );
 
       glDirection = NEITHER;
+      Serial.println(glDirection);
       while( NEITHER == glDirection )
       {
         Serial.println(digitalRead( leftProximitySensor ));
@@ -76,23 +81,27 @@ void loop( void )
         //also do other stuff while moving forward (future)
         delay( POOLING_DELAY );
       }
+      Serial.println("object detected");
       glState = eTurn;
       break;
     }
 
     case eTurn:
     {
+      Serial.print("turning ");
       // record the much time we spend here...
       unsigned long timePassed = millis();
     
       if( TURN_LEFT == glDirection )
       {
+        Serial.println("left");
         killLeftSensor();
         // do the actual turn's task, turn
         turnLeft();
       }
       else
       {
+        Serial.println("right");
         killRightSensor();
         // do the actual turn's task, turn
         turnRight();
@@ -117,6 +126,7 @@ void loop( void )
           )
         {
           glDirection = NEITHER;
+          Serial.println("object gone");
           glState = eMoveForward;
         }
         
@@ -128,6 +138,7 @@ void loop( void )
     
     case eTurnFull:
     {
+      Serial.println("turning full");
       unsigned long timePassed = millis();
 
       // do the step task
@@ -151,6 +162,7 @@ void loop( void )
             ( glDirection == TURN_RIGHT && digitalRead( leftProximitySensor ) )
           )
         {
+          Serial.println("object gone");
           glDirection = NEITHER;
           glState = eMoveForward;
         }
@@ -164,6 +176,7 @@ void loop( void )
     case eError:
     {
       inError();
+      Serial.println("running error state");
       // no often, only try this step in case of error
       // all logic is inside the step function.
       // then start over from idle for we don't know where we are
@@ -192,11 +205,13 @@ void enableSensors( void )
 
 void killRightSensor( void )
 {
+  Serial.println("kill right");
   digitalWrite( rightSensor, LOW );
 }
 
 void killLeftSensor( void )
 {
+  Serial.println("kill left");
   digitalWrite( leftSensor, LOW );
 }
 
