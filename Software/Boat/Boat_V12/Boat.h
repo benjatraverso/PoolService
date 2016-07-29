@@ -33,6 +33,8 @@ const int ERROR_TIME		        = 60 * SECONDS;	// 60 seconds to determin we are s
 const byte DETECTED      = 0;
 const byte GONE          = 1;
 
+const byte SUNS_DEAD     = 1000;
+
 //----------------------------------------------------------------------------
 //                            ENUMS
 //----------------------------------------------------------------------------
