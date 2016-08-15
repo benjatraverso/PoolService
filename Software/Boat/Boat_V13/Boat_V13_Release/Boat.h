@@ -52,6 +52,7 @@ enum States
   eMoveBackwards,
   eTurn,
   eTurnFull,
+  eScapeShadow,
   eError
 };
 
