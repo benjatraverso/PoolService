@@ -19,8 +19,8 @@ const byte LEFT                 = 0;
 
 const byte leftProximitySensor  = 2;   //interrupt input 0 reads left sensor (DP2 is interrupt 0)
 const byte rightProximitySensor = 3;   //interrupt input 1 reads right sensor (DP3 is interrupt 1)
-const byte leftSensor    = 5;
-const byte rightSensor   = 4;
+const byte leftSensorPw    = 5;
+const byte rightSensorPw   = 4;
 
 const byte LeftShadowSensor = A5;
 const byte RightShadowSensor = A4;
@@ -52,7 +52,7 @@ enum States
   eMoveBackwards,
   eTurn,
   eTurnFull,
-  eScapeShadow,
+  eScapeShadows,
   eError
 };
 
@@ -70,7 +70,7 @@ enum States
 //                               |             |
 // rightProximitySensor INT1 PD3 | 5        24 | AI1
 //                               |             |
-// rightSensor               PD4 | 6        23 | AI0
+// rightSensorPw             PD4 | 6        23 | AI0
 //                               |             |
 //                           VCC | 7        22 | GND
 //                               |             |
@@ -80,7 +80,7 @@ enum States
 //                               |             |
 //                         XTAL2 | 10       19 | DP13         MotorRB
 //                               |             |
-// leftSensor          (PWM) DP5 | 11       18 | DP12         MotorRF
+// leftSensorPw        (PWM) DP5 | 11       18 | DP12         MotorRF
 //                               |             |
 //                     (PWM) DP6 | 12       17 | DP11 (PWM)   EnableLeft
 //                               |             |

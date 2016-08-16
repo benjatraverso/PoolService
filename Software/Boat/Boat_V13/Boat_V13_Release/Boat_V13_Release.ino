@@ -71,7 +71,7 @@ void loop( void )
 			{
 				if( leftShadowDetected() || rightShadowDetected() )
 				{
-					glState = eScapeShadow;
+					glState = eScapeShadows;
 				}
 				else if( objectDetectedLeft() )
 				{
@@ -90,9 +90,12 @@ void loop( void )
 					glDirection = NEITHER; //just in case...
 					break;
 				}
-
-				//also do other stuff while moving forward (future)
-				delay( POOLING_DELAY );
+				else
+				{
+					// TODO: also do other stuff while moving forward (future)
+					// we will stay here, so let's wait a moment for next sensors' check
+					delay( POOLING_DELAY );					
+				}
 			}
 
 			break;
@@ -120,7 +123,7 @@ void loop( void )
 			{
 				if( leftShadowDetected() || rightShadowDetected() )
 				{
-					glState = eScapeShadow;
+					glState = eScapeShadows;
 				}
 				// stay here as long as the object is still detected
 				// only read the sensor we care about
@@ -185,14 +188,17 @@ void loop( void )
 			break;
 		}
 
-		case eScapeShadow:
+		case eScapeShadows:
 		{
-			//try to scape
+			// try to scape
 			beIdle();
 
-			// TODO: finde a way to scape the shadows without crashing
-			while( eScapeShados == glState )
+			// find a way to scape the shadows without crashing
+			while( eScapeShadows == glState )
 			{
+				// we will stay in here as long as there is a risk of getting
+				// in an area without sun, for if we do so, game is over
+
 				//take new lectures:
 				bool rightShadow = rightShadowDetected();
 				bool leftShadow = leftShadowDetected();
@@ -205,17 +211,20 @@ void loop( void )
 				{
 					turnFull( TURN_RIGHT );
 				}
-				else if( rightShadow && leftShadow )
+				else if( rightShadow || leftShadow )
 				{
+					// cant move to a side if there is an obstacle there
+					// so we'll need to go back a bit and retry avoiding without crashing
 					moveBackwards();
 				}
 				else
 				{
-					glState = eMoveForward;
+					// if we fell here, there's no shadow detected anymore
+					// calm down and re-evaluate where we are
+					glState = eIdle;
 				}
 			}
 
-			glState = eIdle;
 			break;
 		}
 
@@ -236,11 +245,10 @@ void loop( void )
 			glDirection = NEITHER;
 		}
 	}
-	//delay( STEPS_DELAY );
 }
 
 //----------------------------------------------------------------------------
-//                            SENSORS - INTERRUPTS
+//                            SENSORS
 //----------------------------------------------------------------------------
 void enableSensors( void )
 {
