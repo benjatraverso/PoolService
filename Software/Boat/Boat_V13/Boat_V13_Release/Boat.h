@@ -22,8 +22,8 @@ const byte rightProximitySensor = 3;   //interrupt input 1 reads right sensor (D
 const byte leftSensor    = 5;
 const byte rightSensor   = 4;
 
-const byte LeftShadowSensor = A0;
-const byte RightShadowSensor = A1;
+const byte LeftShadowSensor = A5;
+const byte RightShadowSensor = A4;
 
 const byte NORMAL_SPEED         = 100;
 const byte LOW_SPEED            = 75;
@@ -31,8 +31,8 @@ const byte HIGH_SPEED           = 125;
 const int SECONDS               = 1000;
 const int STEPS_DELAY           = 3 * SECONDS;
 const int FULL_TURN_TIME      	= 2 * SECONDS;		// 2 seconds to pass from turning to 2 motors turnning
-const int	ERROR_DELAY        = 10 * SECONDS;
-const int	URNING_ERROR_TIME = 30 * SECONDS;     // seconds to determin we are stuck while turning
+const int ERROR_DELAY	        = 10 * SECONDS;
+const int URNING_ERROR_TIME		= 30 * SECONDS;     // seconds to determin we are stuck while turning
 const int POOLING_DELAY         = 500;
 const int GET_AWAY_TIME			= 1 * SECONDS;
 

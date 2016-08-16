@@ -19,8 +19,8 @@ void setup()
 {
 	pinMode( EnableRight, OUTPUT );//same for right one
 	
-	pinMode( leftSensor, OUTPUT );
-	pinMode( rightSensor, OUTPUT );
+	pinMode( leftSensorPw, OUTPUT );
+	pinMode( rightSensorPw, OUTPUT );
 
 	pinMode( rightProximitySensor, INPUT );
 	pinMode( leftProximitySensor, INPUT );
@@ -30,6 +30,10 @@ void setup()
 	pinMode( MotorLB, OUTPUT );
 	pinMode( MotorRF, OUTPUT );
 	pinMode( MotorRB, OUTPUT );
+
+	//set shadow detectors as input
+	pinMode( LeftShadowSensor, INPUT );
+	pinMode( RightShadowSensor, INPUT );
 
 	// start with everything dead
 	glState = eIdle;
@@ -65,31 +69,21 @@ void loop( void )
 
 			while( NEITHER == glDirection )
 			{
-				if( !digitalRead( leftProximitySensor ) )
+				if( leftShadowDetected() || rightShadowDetected() )
+				{
+					glState = eScapeShadow;
+				}
+				else if( objectDetectedLeft() )
 				{
 					glDirection = TURN_RIGHT;
 					glState = eTurn;
 				}
-				
-				if( !digitalRead( rightProximitySensor ) )
+				else if( objectDetectedRight() )
 				{
 					glDirection = TURN_LEFT;
 					glState = eTurn;
 				}
-				
-				if( SUNS_DEAD < analogRead( LeftShadowSensor ) )
-				{
-					glDirection = TURN_RIGHT;
-					glState = eScapeShadow;
-				}
-				
-				if(SUNS_DEAD < analogRead( RightShadowSensor ) )
-				{
-					glDirection = TURN_LEFT;
-					glState = eScapeShadow;
-				}
-						
-				if ( (2*60*100) < ( millis() - timePassed ) )
+				else if ( (2*60*100) < ( millis() - timePassed ) )
 				{
 					// we've been here for too long, we've got to be stuck
 					glState = eError;
@@ -124,13 +118,17 @@ void loop( void )
 			
 			while( NEITHER != glDirection && eTurn == glState )
 			{
+				if( leftShadowDetected() || rightShadowDetected() )
+				{
+					glState = eScapeShadow;
+				}
 				// stay here as long as the object is still detected
 				// only read the sensor we care about
 				// if that input is now high, go to forward
-				if (
+				else if(
 					//if glDirection is different, the digitalRead is not performed and the other expression of the OR is evaluated
-					( TURN_LEFT == glDirection && digitalRead( rightProximitySensor ) ) ||
-					( TURN_RIGHT == glDirection && digitalRead( leftProximitySensor ) )
+					( TURN_LEFT == glDirection && !objectDetectedRight() ) ||
+					( TURN_RIGHT == glDirection && !objectDetectedLeft() )
 					)
 				{
 					glDirection = NEITHER;
@@ -156,8 +154,6 @@ void loop( void )
 			unsigned long timePassed = millis();
 
 			// do the step task
-			int lint = digitalRead( leftProximitySensor );
-			int rint = digitalRead( rightProximitySensor );
 			turnFull( glDirection );
 			
 			// stay here untill there is no more object detected or time's been too long
@@ -166,13 +162,13 @@ void loop( void )
 				// only read the sensor we care about
 				// if that input is now high, go to forward
 				if (
-					(TURN_LEFT == glDirection && digitalRead(rightProximitySensor)) ||
-					(TURN_RIGHT == glDirection && digitalRead(leftProximitySensor))
+					( TURN_LEFT == glDirection && !objectDetectedRight() ) ||
+					( TURN_RIGHT == glDirection && !objectDetectedLeft() )
 					)
 				{
 					glDirection = NEITHER;
 					glState = eMoveForward;
-					delay(GET_AWAY_TIME); // just turn a little longer so the angle is not completely parallel to the wall
+					delay( GET_AWAY_TIME ); // just turn a little longer so the angle is not completely parallel to the wall
 				}
 				// or we figured there must be an error
 				else if( 2*60*100 < ( millis() - timePassed ) )
@@ -182,7 +178,7 @@ void loop( void )
 				}
 				else
 				{
-					delay(POOLING_DELAY); // we will stay here, wait a little for next sensors check
+					delay( POOLING_DELAY ); // we will stay here, wait a little for next sensors check
 				}
 			}
 			
@@ -191,9 +187,34 @@ void loop( void )
 
 		case eScapeShadow:
 		{
+			//try to scape
+			beIdle();
+
 			// TODO: finde a way to scape the shadows without crashing
-			while(SUNS_DEAD < analogRead( LeftShadowSensor ) || SUNS_DEAD < analogRead( LeftShadowSensor ))
-			turnFull( glDirection );
+			while( eScapeShados == glState )
+			{
+				//take new lectures:
+				bool rightShadow = rightShadowDetected();
+				bool leftShadow = leftShadowDetected();
+
+				if( rightShadow && !leftShadow && !objectDetectedLeft() )
+				{
+					turnFull( TURN_LEFT );
+				}
+				else if( leftShadow && !rightShadow && !objectDetectedRight() )
+				{
+					turnFull( TURN_RIGHT );
+				}
+				else if( rightShadow && leftShadow )
+				{
+					moveBackwards();
+				}
+				else
+				{
+					glState = eMoveForward;
+				}
+			}
+
 			glState = eIdle;
 			break;
 		}
@@ -223,18 +244,38 @@ void loop( void )
 //----------------------------------------------------------------------------
 void enableSensors( void )
 {
-	digitalWrite( leftSensor, HIGH );
-	digitalWrite( rightSensor, HIGH );
+	digitalWrite( leftSensorPw, HIGH );
+	digitalWrite( rightSensorPw, HIGH );
 }
 
 void killRightSensor( void )
 {
-	digitalWrite( rightSensor, LOW );
+	digitalWrite( rightSensorPw, LOW );
 }
 
 void killLeftSensor( void )
 {
-	digitalWrite( leftSensor, LOW );
+	digitalWrite( leftSensorPw, LOW );
+}
+
+bool objectDetectedLeft( void )
+{
+	return !digitalRead( leftProximitySensor );
+}
+
+bool objectDetectedRight( void )
+{
+	return !digitalRead( rightProximitySensor );
+}
+
+bool rightShadowDetected( void )
+{
+	return SUNS_DEAD < analogRead( RightShadowSensor );
+}
+
+bool leftShadowDetected( void )
+{
+	return SUNS_DEAD < analogRead( LeftShadowSensor );
 }
 
 //----------------------------------------------------------------------------
