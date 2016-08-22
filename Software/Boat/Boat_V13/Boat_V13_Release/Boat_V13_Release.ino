@@ -192,6 +192,7 @@ void loop( void )
 		{
 			// try to scape
 			beIdle();
+			enableSensors();
 
 			// find a way to scape the shadows without crashing
 			while( eScapeShadows == glState )
@@ -268,22 +269,26 @@ void killLeftSensor( void )
 
 bool objectDetectedLeft( void )
 {
-	return !digitalRead( leftProximitySensor );
+	// object detected puts the sensor's out in a low state
+	return ( LOW == digitalRead( leftProximitySensor ) );
 }
 
 bool objectDetectedRight( void )
 {
-	return !digitalRead( rightProximitySensor );
+	// object detected puts the sensor's out in a low state
+	return ( LOW == digitalRead( rightProximitySensor ) );
 }
 
 bool rightShadowDetected( void )
 {
-	return SUNS_DEAD < analogRead( RightShadowSensor );
+	// if the readings are lower than the calculated limit
+	return ( SUNS_DEAD > analogRead( RightShadowSensor ) );
 }
 
 bool leftShadowDetected( void )
 {
-	return SUNS_DEAD < analogRead( LeftShadowSensor );
+	// if the readings are lower than the calculated limit
+	return ( SUNS_DEAD > analogRead( LeftShadowSensor ) );
 }
 
 //----------------------------------------------------------------------------
