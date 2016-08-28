@@ -17,7 +17,8 @@ int glSpeed = HIGH_SPEED;
 //----------------------------------------------------------------------------
 void setup()
 {
-	pinMode( EnableRight, OUTPUT );//same for right one
+	pinMode( EnableLeft, OUTPUT );
+	pinMode( EnableRight, OUTPUT );
 	
 	pinMode( leftSensorPw, OUTPUT );
 	pinMode( rightSensorPw, OUTPUT );
